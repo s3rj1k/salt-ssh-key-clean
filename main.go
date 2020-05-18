@@ -30,8 +30,9 @@ type KnownHost struct {
 	Key  string
 }
 
-func toKnownHosts(r io.Reader) chan KnownHost {
+func toKnownHosts(readers ...io.Reader) chan KnownHost {
 	out := make(chan KnownHost)
+	r := io.MultiReader(readers...)
 
 	go func(r io.Reader, out chan KnownHost) {
 		scanner := bufio.NewScanner(r)

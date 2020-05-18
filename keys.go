@@ -38,7 +38,12 @@ func knownHostExecOutputWrapper(name string, args ...string) []KnownHost {
 		args...,
 	)
 
-	pipe, err := cmd.StdoutPipe()
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		return nil
 	}
@@ -47,7 +52,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []KnownHost {
 
 	out := make([]KnownHost, 0)
 
-	for el := range toKnownHosts(pipe) {
+	for el := range toKnownHosts(stdoutPipe, stderrPipe) {
 		out = append(out, el)
 	}
 
