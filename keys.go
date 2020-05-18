@@ -28,22 +28,14 @@ func init() {
 	}
 }
 
-func sshKeyFind(host string, port int) []KnownHost {
+func knownHostExecOutputWrapper(name string, args ...string) []KnownHost {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
-	var search string
-
-	if port > 0 {
-		search = fmt.Sprintf("[%s]:%d", host, port)
-	} else {
-		search = host
-	}
-
 	cmd := exec.CommandContext(
 		ctx,
-		sshKeyGenBinPath,
-		"-F", search,
+		name,
+		args...,
 	)
 
 	pipe, err := cmd.StdoutPipe()
@@ -64,10 +56,19 @@ func sshKeyFind(host string, port int) []KnownHost {
 	return out
 }
 
-func sshKeyScan(host string, port int) []KnownHost {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
-	defer cancel()
+func sshKeyFind(host string, port int) []KnownHost {
+	var search string
 
+	if port > 0 {
+		search = fmt.Sprintf("[%s]:%d", host, port)
+	} else {
+		search = host
+	}
+
+	return knownHostExecOutputWrapper(sshKeyGenBinPath, "-F", search)
+}
+
+func sshKeyScan(host string, port int) []KnownHost {
 	args := make([]string, 0)
 	args = append(
 		args,
@@ -86,26 +87,5 @@ func sshKeyScan(host string, port int) []KnownHost {
 		host,
 	)
 
-	cmd := exec.CommandContext(
-		ctx,
-		sshKeyScanBinPath,
-		args...,
-	)
-
-	pipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil
-	}
-
-	cmd.Start()
-
-	out := make([]KnownHost, 0)
-
-	for el := range toKnownHosts(pipe) {
-		out = append(out, el)
-	}
-
-	cmd.Wait()
-
-	return out
+	return knownHostExecOutputWrapper(sshKeyScanBinPath, args...)
 }
