@@ -1,6 +1,11 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
+	"io"
+	"strings"
+
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -16,15 +21,40 @@ root@salt:/srv/pillar/users# ssh-keygen -F titan1.mirohost.net
 
 func main() {
 	spew.Dump(sshKeyScan("noc.mirohost.net", 2211))
-	spew.Dump(sshKeyFind("noc.mirohost.net", 2211))
+	//spew.Dump(sshKeyFind("noc.mirohost.net", 2211))
 }
 
-// type KnownHost struct {
-// 	Host string
-// 	Type string
-// 	Key  string
-// }
+type KnownHost struct {
+	Host string
+	Type string
+	Key  string
+}
 
-// func toKnownHosts(b []byte) []KnownHost {
+func toKnownHosts(r io.Reader) error {
+	scanner := bufio.NewScanner(r)
 
-// }
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "# ") {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) != 3 {
+			continue
+		}
+
+		fmt.Println(KnownHost{
+			Host: fields[0],
+			Type: fields[1],
+			Key:  fields[2],
+		})
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}

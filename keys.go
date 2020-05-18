@@ -88,27 +88,24 @@ func sshKeyScan(host string, port int) ([]byte, error) {
 		host,
 	)
 
-	out, err := exec.CommandContext(
+	cmd := exec.CommandContext(
 		ctx,
 		sshKeyScanBinPath,
 		args...,
-	).CombinedOutput()
+	)
+
+	output, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
 
-	lines := bytes.Split(out, []byte("\n"))
+	cmd.Start()
 
-	var i int
-
-	for _, b := range lines {
-		if !bytes.HasPrefix(b, []byte("# ")) {
-			lines[i] = b
-			i++
-		}
+	if err = toKnownHosts(output); err != nil {
+		return nil, err
 	}
 
-	lines = lines[:i]
+	cmd.Wait()
 
-	return bytes.Join(lines, []byte("\n")), nil
+	return nil, nil
 }
