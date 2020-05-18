@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
+
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
@@ -21,7 +21,7 @@ root@salt:/srv/pillar/users# ssh-keygen -F titan1.mirohost.net
 
 func main() {
 	spew.Dump(sshKeyScan("noc.mirohost.net", 2211))
-	//spew.Dump(sshKeyFind("noc.mirohost.net", 2211))
+	spew.Dump(sshKeyFind("noc.mirohost.net", 2211))
 }
 
 type KnownHost struct {
@@ -30,31 +30,37 @@ type KnownHost struct {
 	Key  string
 }
 
-func toKnownHosts(r io.Reader) error {
-	scanner := bufio.NewScanner(r)
+func toKnownHosts(r io.Reader) chan KnownHost {
+	out := make(chan KnownHost)
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	go func(r io.Reader, out chan KnownHost) {
+		scanner := bufio.NewScanner(r)
 
-		if strings.HasPrefix(line, "# ") {
-			continue
+		for scanner.Scan() {
+			line := scanner.Text()
+
+			if strings.HasPrefix(line, "# ") {
+				continue
+			}
+
+			fields := strings.Fields(line)
+			if len(fields) != 3 {
+				continue
+			}
+
+			out <- KnownHost{
+				Host: fields[0],
+				Type: fields[1],
+				Key:  fields[2],
+			}
 		}
 
-		fields := strings.Fields(line)
-		if len(fields) != 3 {
-			continue
+		close(out)
+
+		if err := scanner.Err(); err != nil {
+			return
 		}
+	}(r, out)
 
-		fmt.Println(KnownHost{
-			Host: fields[0],
-			Type: fields[1],
-			Key:  fields[2],
-		})
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return nil
+	return out
 }

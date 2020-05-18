@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -29,7 +28,7 @@ func init() {
 	}
 }
 
-func sshKeyFind(host string, port int) ([]byte, error) {
+func sshKeyFind(host string, port int) []KnownHost {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
@@ -41,32 +40,31 @@ func sshKeyFind(host string, port int) ([]byte, error) {
 		search = host
 	}
 
-	out, err := exec.CommandContext(
+	cmd := exec.CommandContext(
 		ctx,
 		sshKeyGenBinPath,
 		"-F", search,
-	).CombinedOutput()
+	)
+
+	pipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
-	lines := bytes.Split(out, []byte("\n"))
+	cmd.Start()
 
-	var i int
+	out := make([]KnownHost, 0)
 
-	for _, b := range lines {
-		if !bytes.HasPrefix(b, []byte("# ")) {
-			lines[i] = b
-			i++
-		}
+	for el := range toKnownHosts(pipe) {
+		out = append(out, el)
 	}
 
-	lines = lines[:i]
+	cmd.Wait()
 
-	return bytes.Join(lines, []byte("\n")), nil
+	return out
 }
 
-func sshKeyScan(host string, port int) ([]byte, error) {
+func sshKeyScan(host string, port int) []KnownHost {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
@@ -94,18 +92,20 @@ func sshKeyScan(host string, port int) ([]byte, error) {
 		args...,
 	)
 
-	output, err := cmd.StdoutPipe()
+	pipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	cmd.Start()
 
-	if err = toKnownHosts(output); err != nil {
-		return nil, err
+	out := make([]KnownHost, 0)
+
+	for el := range toKnownHosts(pipe) {
+		out = append(out, el)
 	}
 
 	cmd.Wait()
 
-	return nil, nil
+	return out
 }
