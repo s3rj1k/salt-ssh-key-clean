@@ -16,9 +16,17 @@ import (
 const timeout = 5
 
 type knownHost struct {
-	Host string
-	Type string
-	Key  string
+	Host   string
+	Type   string
+	PubKey string
+}
+
+func (s knownHost) String() string {
+	return fmt.Sprintf("%s %s %s", s.Host, s.Type, s.PubKey)
+}
+
+func (s knownHost) KeyWithType() string {
+	return fmt.Sprintf("%s %s", s.Type, s.PubKey)
 }
 
 var (
@@ -68,7 +76,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 
 	cmd.Wait()
 
-	return out
+	return deDuplicateKnownHosts(out)
 }
 
 func sshKeyFind(host string, port int) []knownHost {
@@ -115,19 +123,19 @@ func toKnownHosts(readers ...io.Reader) chan knownHost {
 		for scanner.Scan() {
 			line := scanner.Text()
 
-			if strings.HasPrefix(line, "# ") {
+			if strings.HasPrefix(line, "# ") || strings.HasPrefix(line, "@") {
 				continue
 			}
 
 			fields := strings.Fields(line)
-			if len(fields) != 3 {
+			if len(fields) < 3 || len(fields) > 4 {
 				continue
 			}
 
 			out <- knownHost{
-				Host: fields[0],
-				Type: fields[1],
-				Key:  fields[2],
+				Host:   fields[0],
+				Type:   fields[1],
+				PubKey: fields[2],
 			}
 		}
 
@@ -145,14 +153,14 @@ func toKnownHosts(readers ...io.Reader) chan knownHost {
 func deDuplicateKnownHosts(s []knownHost) []knownHost {
 	sort.Slice(
 		s, func(i, j int) bool {
-			return s[i].Type+s[i].Key < s[j].Type+s[j].Key
+			return s[i].KeyWithType() < s[j].KeyWithType()
 		},
 	)
 
 	j := 0
 
 	for i := 1; i < len(s); i++ {
-		if s[i].Type+s[i].Key == s[j].Type+s[j].Key {
+		if s[i].KeyWithType() == s[j].KeyWithType() {
 			continue
 		}
 
@@ -162,4 +170,21 @@ func deDuplicateKnownHosts(s []knownHost) []knownHost {
 	}
 
 	return s[:j+1]
+}
+
+func intersectKnownHosts(left, right []knownHost) []knownHost {
+	intersected := make([]knownHost, 0, len(left)+len(right))
+
+outer:
+	for i := range deDuplicateKnownHosts(left) {
+		for j := range deDuplicateKnownHosts(right) {
+			if left[i].KeyWithType() == right[j].KeyWithType() {
+				intersected = append(intersected, left[i])
+
+				continue outer
+			}
+		}
+	}
+
+	return intersected
 }

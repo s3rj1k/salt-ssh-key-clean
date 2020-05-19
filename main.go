@@ -5,13 +5,10 @@ import (
 )
 
 func main() {
-	s := sshKeyScan("noc.mirohost.net", 2211)
+	scanedKeys := sshKeyScan("noc.mirohost.net", 2211)
+	availiableKeys := sshKeyFind("noc.mirohost.net", 2211)
 
-	s = append(s, s...)
-
-	spew.Dump(sshKeyFind("noc.mirohost.net", 2211))
-
-	s = deDuplicateKnownHosts(s)
-
-	spew.Dump(s)
+	spew.Dump(
+		intersectKnownHosts(scanedKeys, availiableKeys),
+	)
 }
