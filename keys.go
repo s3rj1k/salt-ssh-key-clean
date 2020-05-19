@@ -13,7 +13,10 @@ import (
 	"time"
 )
 
-const timeout = 5
+const (
+	timeout        = 5
+	defaultSSHPort = 22
+)
 
 type knownHost struct {
 	Host   string
@@ -38,11 +41,11 @@ func init() {
 	var err error
 
 	if sshKeyScanBinPath, err = exec.LookPath("ssh-keyscan"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("ssh-keyscan binary not found!\n")
 	}
 
 	if sshKeyGenBinPath, err = exec.LookPath("ssh-keygen"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("ssh-keygen binary not found!\n")
 	}
 }
 
@@ -58,15 +61,21 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
+		log.Printf("exec: %v\n", err)
+
 		return nil
 	}
 
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
+		log.Printf("exec: %v\n", err)
+
 		return nil
 	}
 
 	if err := cmd.Start(); err != nil {
+		log.Printf("exec: %v\n", err)
+
 		return nil
 	}
 
@@ -77,6 +86,8 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 	}
 
 	if err := cmd.Wait(); err != nil {
+		log.Printf("exec: %v\n", err)
+
 		return nil
 	}
 
@@ -86,13 +97,17 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 func sshKeyFind(host string, port int) []knownHost {
 	var search string
 
-	if port > 0 {
+	if port > 0 && port != defaultSSHPort {
 		search = fmt.Sprintf("[%s]:%d", host, port)
 	} else {
 		search = host
 	}
 
-	return knownHostExecOutputWrapper(sshKeyGenBinPath, "-F", search)
+	return knownHostExecOutputWrapper(
+		sshKeyGenBinPath,
+		"-F", search,
+		"-f", cmdKnownHostsFilePath,
+	)
 }
 
 func sshKeyScan(host string, port int) []knownHost {
@@ -102,7 +117,7 @@ func sshKeyScan(host string, port int) []knownHost {
 		"-t", "rsa,dsa,ecdsa,ed25519",
 	)
 
-	if port > 0 {
+	if port > 0 && port != defaultSSHPort {
 		args = append(
 			args,
 			"-p", strconv.Itoa(port),
@@ -146,6 +161,8 @@ func toKnownHosts(readers ...io.Reader) chan knownHost {
 		close(out)
 
 		if err := scanner.Err(); err != nil {
+			log.Printf("scanner: %v\n", err)
+
 			return
 		}
 	}(r, out)
@@ -155,6 +172,10 @@ func toKnownHosts(readers ...io.Reader) chan knownHost {
 
 // https://github.com/golang/go/wiki/SliceTricks#in-place-deduplicate-comparable
 func deDuplicateKnownHosts(s []knownHost) []knownHost {
+	if len(s) == 0 {
+		return nil
+	}
+
 	sort.Slice(
 		s, func(i, j int) bool {
 			return s[i].KeyWithType() < s[j].KeyWithType()
@@ -177,6 +198,10 @@ func deDuplicateKnownHosts(s []knownHost) []knownHost {
 }
 
 func intersectKnownHosts(left, right []knownHost) []knownHost {
+	if len(left) == 0 || len(right) == 0 {
+		return nil
+	}
+
 	intersected := make([]knownHost, 0, len(left)+len(right))
 
 outer:
@@ -191,4 +216,13 @@ outer:
 	}
 
 	return intersected
+}
+
+func getKnownHostsRecord(host string, port int) []knownHost {
+	knownHosts := intersectKnownHosts(
+		sshKeyScan(host, port),
+		sshKeyFind(host, port),
+	)
+
+	return knownHosts
 }
