@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"io"
+	"sort"
 
 	"strings"
 
@@ -20,8 +21,15 @@ root@salt:/srv/pillar/users# ssh-keygen -F titan1.mirohost.net
 */
 
 func main() {
-	spew.Dump(sshKeyScan("noc.mirohost.net", 2211))
+	s := sshKeyScan("noc.mirohost.net", 2211)
+
+	s = append(s, s...)
+
 	spew.Dump(sshKeyFind("noc.mirohost.net", 2211))
+
+	s = deDuplicateKnownHosts(s)
+
+	spew.Dump(s)
 }
 
 type KnownHost struct {
@@ -64,4 +72,27 @@ func toKnownHosts(readers ...io.Reader) chan KnownHost {
 	}(r, out)
 
 	return out
+}
+
+// https://github.com/golang/go/wiki/SliceTricks#in-place-deduplicate-comparable
+func deDuplicateKnownHosts(s []KnownHost) []KnownHost {
+	sort.Slice(
+		s, func(i, j int) bool {
+			return s[i].Type+s[i].Key < s[j].Type+s[j].Key
+		},
+	)
+
+	j := 0
+
+	for i := 1; i < len(s); i++ {
+		if s[i].Type+s[i].Key == s[j].Type+s[j].Key {
+			continue
+		}
+
+		j++
+
+		s[j] = s[i]
+	}
+
+	return s[:j+1]
 }
