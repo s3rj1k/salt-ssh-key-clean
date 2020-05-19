@@ -44,3 +44,19 @@ func parseRoster(path string) (map[string]target, error) {
 
 	return roster, nil
 }
+
+func getTargetsFromRoster(path string) (<-chan target, error) {
+	roster, err := parseRoster(path)
+	if err != nil {
+		return nil, err
+	}
+
+	targets := make(chan target, len(roster))
+	for _, target := range roster {
+		targets <- target
+	}
+
+	close(targets)
+
+	return targets, nil
+}

@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	cmdRosterFilePath     string
-	cmdKnownHostsFilePath string
+	cmdRosterFilePath        string
+	cmdKnownHostsFilePath    string
+	cmdNumberOfConcurentJobs int
 )
 
 func init() {
@@ -20,22 +21,22 @@ func init() {
 }
 
 func main() {
-	flag.StringVar(&cmdRosterFilePath, "roster", "/root/roster_salt", "define an alternative location for the default roster file")
-	flag.StringVar(&cmdKnownHostsFilePath, "hosts", "/root/.ssh/known_hosts", "define an alternative location for the default known_hosts file")
+	flag.StringVar(&cmdRosterFilePath, "roster", "/root/roster_salt", "defines an alternative location for the default roster file")
+	flag.StringVar(&cmdKnownHostsFilePath, "hosts", "/root/.ssh/known_hosts", "defines an alternative location for the default known_hosts file")
+	flag.IntVar(&cmdNumberOfConcurentJobs, "parallel", 5, "defines amount of concurent workers")
+
 	flag.Parse()
 
-	roster, err := parseRoster(cmdRosterFilePath)
+	targets, err := getTargetsFromRoster(cmdRosterFilePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
 
 		os.Exit(1)
 	}
 
-	for k, v := range roster {
-		debug.Printf("%s: %s\n", k, v.String())
-
-		for _, el := range getKnownHostsRecord(v.Host, v.Port) {
-			fmt.Fprintf(os.Stdout, "%s\n", el.String())
-		}
-	}
+	worker(
+		cmdNumberOfConcurentJobs,
+		targets,
+		cmdKnownHostsFilePath,
+	)
 }

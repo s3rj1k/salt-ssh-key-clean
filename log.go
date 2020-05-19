@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 var (
@@ -17,7 +18,7 @@ func init() {
 		0,
 	)
 
-	// if strings.EqualFold(os.Getenv("DEBUG"), "TRUE") {
-	debug.SetOutput(os.Stderr)
-	// }
+	if strings.EqualFold(os.Getenv("DEBUG"), "TRUE") {
+		debug.SetOutput(os.Stderr)
+	}
 }

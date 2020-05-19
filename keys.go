@@ -98,7 +98,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 	return deDuplicateKnownHosts(out)
 }
 
-func sshKeyFind(host string, port int) []knownHost {
+func sshKeyFind(host string, port int, knownHostsPath string) []knownHost {
 	var search string
 
 	if port > 0 && port != defaultSSHPort {
@@ -110,11 +110,11 @@ func sshKeyFind(host string, port int) []knownHost {
 	return knownHostExecOutputWrapper(
 		sshKeyGenBinPath,
 		"-F", search,
-		"-f", cmdKnownHostsFilePath,
+		"-f", knownHostsPath,
 	)
 }
 
-func sshKeyScan(host string, port int) []knownHost {
+func sshKeyScan(host string, port int, _ string) []knownHost {
 	args := make([]string, 0)
 	args = append(
 		args,
@@ -222,11 +222,9 @@ outer:
 	return intersected
 }
 
-func getKnownHostsRecord(host string, port int) []knownHost {
-	knownHosts := intersectKnownHosts(
-		sshKeyScan(host, port),
-		sshKeyFind(host, port),
+func getKnownHostsRecord(host string, port int, knownHostsPath string) []knownHost {
+	return intersectKnownHosts(
+		sshKeyScan(host, port, knownHostsPath),
+		sshKeyFind(host, port, knownHostsPath),
 	)
-
-	return knownHosts
 }
