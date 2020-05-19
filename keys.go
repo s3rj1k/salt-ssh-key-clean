@@ -66,7 +66,9 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 		return nil
 	}
 
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		return nil
+	}
 
 	out := make([]knownHost, 0)
 
@@ -74,7 +76,9 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 		out = append(out, el)
 	}
 
-	cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		return nil
+	}
 
 	return deDuplicateKnownHosts(out)
 }
