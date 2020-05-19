@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -14,7 +13,9 @@ var (
 
 func init() {
 	if os.Getuid() != 0 {
-		log.Fatalf("%s needs to be run as root!\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s needs to be run as root!\n", os.Args[0])
+
+		os.Exit(1)
 	}
 }
 
@@ -25,11 +26,16 @@ func main() {
 
 	roster, err := parseRoster(cmdRosterFilePath)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "%s", err)
+
+		os.Exit(1)
 	}
 
 	for k, v := range roster {
-		fmt.Printf("# %s: %s\n", k, v.String())
-		fmt.Printf("%s\n", getKnownHostsRecord(v.Host, v.Port))
+		debug.Printf("%s: %s\n", k, v.String())
+
+		for _, el := range getKnownHostsRecord(v.Host, v.Port) {
+			fmt.Fprintf(os.Stdout, "%s\n", el.String())
+		}
 	}
 }

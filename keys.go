@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"os"
 	"os/exec"
 	"sort"
 	"strconv"
@@ -41,11 +41,15 @@ func init() {
 	var err error
 
 	if sshKeyScanBinPath, err = exec.LookPath("ssh-keyscan"); err != nil {
-		log.Fatalf("ssh-keyscan binary not found!\n")
+		fmt.Fprintf(os.Stderr, "ssh-keyscan binary not found!\n")
+
+		os.Exit(1)
 	}
 
 	if sshKeyGenBinPath, err = exec.LookPath("ssh-keygen"); err != nil {
-		log.Fatalf("ssh-keygen binary not found!\n")
+		fmt.Fprintf(os.Stderr, "ssh-keygen binary not found!\n")
+
+		os.Exit(1)
 	}
 }
 
@@ -61,20 +65,20 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Printf("exec: %v\n", err)
+		debug.Printf("exec: %v\n", err)
 
 		return nil
 	}
 
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		log.Printf("exec: %v\n", err)
+		debug.Printf("exec: %v\n", err)
 
 		return nil
 	}
 
 	if err := cmd.Start(); err != nil {
-		log.Printf("exec: %v\n", err)
+		debug.Printf("exec: %v\n", err)
 
 		return nil
 	}
@@ -86,7 +90,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		log.Printf("exec: %v\n", err)
+		debug.Printf("exec: %v\n", err)
 
 		return nil
 	}
@@ -132,7 +136,7 @@ func sshKeyScan(host string, port int) []knownHost {
 	return knownHostExecOutputWrapper(sshKeyScanBinPath, args...)
 }
 
-func toKnownHosts(readers ...io.Reader) chan knownHost {
+func toKnownHosts(readers ...io.Reader) <-chan knownHost {
 	out := make(chan knownHost)
 	r := io.MultiReader(readers...)
 
@@ -161,7 +165,7 @@ func toKnownHosts(readers ...io.Reader) chan knownHost {
 		close(out)
 
 		if err := scanner.Err(); err != nil {
-			log.Printf("scanner: %v\n", err)
+			debug.Printf("scanner: %v\n", err)
 
 			return
 		}
