@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/s3rj1k/jrpc2/client"
 	"gopkg.in/yaml.v2"
@@ -9,7 +10,7 @@ import (
 
 func main() {
 	// create RPC client config
-	rpc := client.GetConfig(defaultRPCLink)
+	rpc := client.GetConfig(defaultRPCURL)
 	// set credentials
 	rpc.SetBasicAuth(defaultRPCBasicAuthUser, defaultRPCBasicAuthPass)
 
@@ -31,29 +32,40 @@ func main() {
 		fatal.Fatal(err)
 	}
 
-	roster := make(map[string]Target, len(nodeList)+len(containersList)+len(serviceHostsList))
+	// seed default status skip list
+	hostStatusSkipList := make(map[string]struct{})
+	for _, el := range strings.Split(defaultHostStatusSkipList, ",") {
+		hostStatusSkipList[el] = struct{}{}
+	}
+
+	// roster data
+	roster := make(
+		map[string]Target,
+		len(nodeList)+len(containersList)+len(serviceHostsList),
+	)
 
 	for _, el := range nodeList {
-		if el.Skip() {
+		if el.Skip(hostStatusSkipList) {
 			continue
 		}
 
 		id := fmt.Sprintf(
-			"%s.hosting",
+			"%s.%s",
+			defaultNodeListSuffix,
 			el.GetFQDNWithOutPublicSuffix(),
 		)
 
 		roster[id] = Target{
 			Host:    el.СonfigurationManagement.FQDN,
-			User:    "root",
+			User:    defaultRosterTargetUser,
 			Port:    el.СonfigurationManagement.Port,
-			ThinDir: "/root/salt/",
-			Timeout: 300,
+			ThinDir: defaultRosterTargetThinDir,
+			Timeout: defaultRosterTargetTimeout,
 		}
 	}
 
 	for _, el := range containersList {
-		if el.Skip() {
+		if el.Skip(hostStatusSkipList) {
 			continue
 		}
 
@@ -66,29 +78,30 @@ func main() {
 
 		roster[id] = Target{
 			Host:    el.СonfigurationManagement.FQDN,
-			User:    "root",
+			User:    defaultRosterTargetUser,
 			Port:    el.СonfigurationManagement.Port,
-			ThinDir: "/root/salt/",
-			Timeout: 300,
+			ThinDir: defaultRosterTargetThinDir,
+			Timeout: defaultRosterTargetTimeout,
 		}
 	}
 
 	for _, el := range serviceHostsList {
-		if el.Skip() {
+		if el.Skip(hostStatusSkipList) {
 			continue
 		}
 
 		id := fmt.Sprintf(
-			"%s.service",
+			"%s.%s",
+			defaultServiceDevicesListSuffix,
 			el.GetFQDNWithOutPublicSuffix(),
 		)
 
 		roster[id] = Target{
 			Host:    el.СonfigurationManagement.FQDN,
-			User:    "root",
+			User:    defaultRosterTargetUser,
 			Port:    el.СonfigurationManagement.Port,
-			ThinDir: "/root/salt/",
-			Timeout: 300,
+			ThinDir: defaultRosterTargetThinDir,
+			Timeout: defaultRosterTargetTimeout,
 		}
 	}
 

@@ -30,16 +30,8 @@ type GetListResultObj struct {
 }
 
 // Skip is used for filtering out invalid roster targets.
-func (s GetListResultObj) Skip() bool {
-	if strings.EqualFold(s.Status, "reserved") {
-		return true
-	}
-
-	if strings.EqualFold(s.Status, "unused") {
-		return true
-	}
-
-	if strings.EqualFold(s.Status, "deleted") {
+func (s GetListResultObj) Skip(skip map[string]struct{}) bool {
+	if _, ok := skip[s.Status]; ok {
 		return true
 	}
 
@@ -69,12 +61,12 @@ func (s GetListResultObj) GetShortNodeFQDN() string {
 func (s GetListResultObj) GetShortHostingContainerType() string {
 	switch strings.ToLower(strings.TrimSpace(s.Type)) {
 	case "vps":
-		return "vs" // eVPS
+		return defaultEVPSShortTypeName
 	case "shared":
-		return "sd" // Shared Hosting
+		return defaultSharedHostingShortTypeName
 	case "smart":
-		return "sm" // Smart Dedicated
+		return defaultSmartDedicatedShortTypeName
 	default:
-		return "undef" // Unknown
+		return defaultUndefinedShortTypeName
 	}
 }
