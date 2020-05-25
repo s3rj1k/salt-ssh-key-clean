@@ -14,6 +14,7 @@ func GetShortFQDN(fqdn string) string {
 		err   error
 	)
 
+	// minimal sanitization
 	fqdn = strings.ToLower(strings.TrimSpace(fqdn))
 
 	suff, err = publicsuffix.EffectiveTLDPlusOne(fqdn)
@@ -21,9 +22,9 @@ func GetShortFQDN(fqdn string) string {
 		return fqdn
 	}
 
-	if fqdn == suff {
+	if fqdn == suff { // no GTLD+1
 		suff, icann = publicsuffix.PublicSuffix(fqdn)
-		if !icann {
+		if !icann { // not registered in ICANN
 			return fqdn
 		}
 	}
@@ -36,10 +37,11 @@ func GetShortFQDN(fqdn string) string {
 
 // GetFQDNWithOutPublicSuffix returns domain stripped of public suffix (ICANN registered).
 func GetFQDNWithOutPublicSuffix(fqdn string) string {
+	// minimal sanitization
 	fqdn = strings.ToLower(strings.TrimSpace(fqdn))
 
 	suff, icann := publicsuffix.PublicSuffix(fqdn)
-	if !icann {
+	if !icann { // not registered in ICANN
 		return fqdn
 	}
 

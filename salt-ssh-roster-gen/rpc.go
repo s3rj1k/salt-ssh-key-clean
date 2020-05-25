@@ -46,6 +46,7 @@ func getListWrapper(c *client.Config, key, method, project string) ([]GetListRes
 		AccessKey: key,
 	}
 
+	// set project name
 	if len(project) > 0 {
 		paramsObj.Project = project
 	}

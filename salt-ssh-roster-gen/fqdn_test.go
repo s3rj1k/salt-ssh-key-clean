@@ -36,7 +36,11 @@ func Test_GetShortFQDN(t *testing.T) {
 	for i, test := range tests {
 		got := GetShortFQDN(test.in)
 
-		r.Equalf(got, test.out, "GetShortFQDN(\"%s\"): tc %d, Expected \"%s\", Got \"%s\"", test.in, i, test.out, got)
+		r.Equalf(
+			got, test.out,
+			"GetShortFQDN(\"%s\"): tc %d, Expected \"%s\", Got \"%s\"",
+			test.in, i, test.out, got,
+		)
 	}
 }
 
@@ -70,6 +74,10 @@ func Test_GetFQDNWithOutPublicSuffix(t *testing.T) {
 	for i, test := range tests {
 		got := GetFQDNWithOutPublicSuffix(test.in)
 
-		r.Equalf(got, test.out, "GetFQDNWithOutPublicSuffix(\"%s\"): tc %d, Expected \"%s\", Got \"%s\"", test.in, i, test.out, got)
+		r.Equalf(
+			got, test.out,
+			"GetFQDNWithOutPublicSuffix(\"%s\"): tc %d, Expected \"%s\", Got \"%s\"",
+			test.in, i, test.out, got,
+		)
 	}
 }

@@ -69,12 +69,12 @@ func (s GetListResultObj) GetShortNodeFQDN() string {
 func (s GetListResultObj) GetShortHostingContainerType() string {
 	switch strings.ToLower(strings.TrimSpace(s.Type)) {
 	case "vps":
-		return "vs"
+		return "vs" // eVPS
 	case "shared":
-		return "sd"
+		return "sd" // Shared Hosting
 	case "smart":
-		return "sm"
+		return "sm" // Smart Dedicated
 	default:
-		return "undef"
+		return "undef" // Unknown
 	}
 }

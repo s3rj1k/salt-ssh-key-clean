@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/s3rj1k/jrpc2/client"
 	"gopkg.in/yaml.v2"
@@ -17,19 +16,19 @@ func main() {
 	// get list of hosting nodes
 	nodeList, err := GetNodeList(rpc, defaultRPCAccessKey)
 	if err != nil {
-		log.Fatal(err)
+		fatal.Fatal(err)
 	}
 
 	// get list of hosting containers
 	containersList, err := GetContainersList(rpc, defaultRPCAccessKey)
 	if err != nil {
-		log.Fatal(err)
+		fatal.Fatal(err)
 	}
 
 	// get list of service hosts
 	serviceHostsList, err := GetServiceDevicesList(rpc, defaultRPCAccessKey, defaultProjectNameForGetListMethods)
 	if err != nil {
-		log.Fatal(err)
+		fatal.Fatal(err)
 	}
 
 	roster := make(map[string]Target, len(nodeList)+len(containersList)+len(serviceHostsList))
@@ -51,7 +50,6 @@ func main() {
 			ThinDir: "/root/salt/",
 			Timeout: 300,
 		}
-
 	}
 
 	for _, el := range containersList {
@@ -96,7 +94,7 @@ func main() {
 
 	b, err := yaml.Marshal(roster)
 	if err != nil {
-		log.Fatal(err)
+		fatal.Fatal(err)
 	}
 
 	fmt.Println(string(b))
