@@ -2,6 +2,8 @@ package main
 
 // Target describes single target element of salt-ssh roster.
 type Target struct {
+	ID string `yaml:"-"`
+
 	Host    string `yaml:"host"`
 	User    string `yaml:"user"`
 	Port    int    `yaml:"port"`

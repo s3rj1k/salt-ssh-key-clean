@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/s3rj1k/jrpc2/client"
@@ -56,10 +57,14 @@ func main() {
 		)
 
 		roster[id] = Target{
-			Host:    el.СonfigurationManagement.FQDN,
-			User:    defaultRosterTargetUser,
-			Port:    el.СonfigurationManagement.Port,
-			ThinDir: defaultRosterTargetThinDir,
+			Host: el.СonfigurationManagement.FQDN,
+			User: defaultRosterTargetUser,
+			Port: el.СonfigurationManagement.Port,
+			ThinDir: filepath.Join(
+				defaultRosterTargetThinDirPrefix,
+				defaultRosterTargetUser,
+				defaultRosterTargetThinDirSuffix,
+			) + "/",
 			Timeout: defaultRosterTargetTimeout,
 		}
 	}
@@ -77,10 +82,14 @@ func main() {
 		)
 
 		roster[id] = Target{
-			Host:    el.СonfigurationManagement.FQDN,
-			User:    defaultRosterTargetUser,
-			Port:    el.СonfigurationManagement.Port,
-			ThinDir: defaultRosterTargetThinDir,
+			Host: el.СonfigurationManagement.FQDN,
+			User: defaultRosterTargetUser,
+			Port: el.СonfigurationManagement.Port,
+			ThinDir: filepath.Join(
+				defaultRosterTargetThinDirPrefix,
+				defaultRosterTargetUser,
+				defaultRosterTargetThinDirSuffix,
+			) + "/",
 			Timeout: defaultRosterTargetTimeout,
 		}
 	}
@@ -97,10 +106,14 @@ func main() {
 		)
 
 		roster[id] = Target{
-			Host:    el.СonfigurationManagement.FQDN,
-			User:    defaultRosterTargetUser,
-			Port:    el.СonfigurationManagement.Port,
-			ThinDir: defaultRosterTargetThinDir,
+			Host: el.СonfigurationManagement.FQDN,
+			User: defaultRosterTargetUser,
+			Port: el.СonfigurationManagement.Port,
+			ThinDir: filepath.Join(
+				defaultRosterTargetThinDirPrefix,
+				defaultRosterTargetUser,
+				defaultRosterTargetThinDirSuffix,
+			) + "/",
 			Timeout: defaultRosterTargetTimeout,
 		}
 	}

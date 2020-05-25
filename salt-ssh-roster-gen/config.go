@@ -16,9 +16,10 @@ const (
 	defaultProjectNameForGetListMethods = "mirohost"
 	// envKeyProjectNameForGetListMethods  = "PROJECT_NAME"
 
-	defaultRosterTargetUser    = "root"
-	defaultRosterTargetThinDir = "/root/salt/"
-	defaultRosterTargetTimeout = 300
+	defaultRosterTargetUser          = "root"
+	defaultRosterTargetThinDirPrefix = "/"
+	defaultRosterTargetThinDirSuffix = "/salt/"
+	defaultRosterTargetTimeout       = 300
 
 	defaultNodeListSuffix           = "hosting"
 	defaultServiceDevicesListSuffix = "service"
