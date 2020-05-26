@@ -73,8 +73,7 @@ func getListWrapper(c *client.Config, key, method, project string) ([]GetListRes
 	}
 
 	// decode result
-	err = json.Unmarshal(resultRawData, &resultObj)
-	if err != nil {
+	if err = json.Unmarshal(resultRawData, &resultObj); err != nil {
 		return resultObj, fmt.Errorf("method=%s result error: %s", method, err.Error())
 	}
 

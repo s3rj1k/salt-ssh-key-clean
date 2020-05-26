@@ -23,13 +23,13 @@ func main() {
 	}
 
 	// get list of hosting nodes
-	nodeList, err := GetNodeList(rpc, defaultRPCAccessKey)
+	hostingNodeList, err := GetNodeList(rpc, defaultRPCAccessKey)
 	if err != nil {
 		fatal.Fatal(err)
 	}
 
 	// get list of hosting containers
-	containersList, err := GetContainersList(rpc, defaultRPCAccessKey)
+	hostingContainersList, err := GetContainersList(rpc, defaultRPCAccessKey)
 	if err != nil {
 		fatal.Fatal(err)
 	}
@@ -41,17 +41,19 @@ func main() {
 	}
 
 	// roster data
-	roster := make(
-		map[string]Target,
-		len(nodeList)+len(containersList)+len(serviceHostsList),
+	roster := CreateNewRoster(
+		len(hostingNodeList) + len(hostingContainersList) + len(serviceHostsList),
 	)
 
-	for _, el := range nodeList {
+	// add hosting nodes to roster
+	for _, el := range hostingNodeList {
 		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		roster[el.GetHostingNodeID(cfg.HostingNodeListSuffix)] = Target{
+		id := el.GetHostingNodeID(cfg.HostingNodeListSuffix)
+
+		roster.Data[id] = Target{
 			Host:    el.СonfigurationManagement.FQDN,
 			User:    cfg.RosterTargetUser,
 			Port:    el.СonfigurationManagement.Port,
@@ -60,12 +62,15 @@ func main() {
 		}
 	}
 
-	for _, el := range containersList {
+	// add hosting containers to roster
+	for _, el := range hostingContainersList {
 		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		roster[el.GetHostingContainerID(cfg.HostingContainerListSuffix)] = Target{
+		id := el.GetHostingContainerID(cfg.HostingContainerListSuffix)
+
+		roster.Data[id] = Target{
 			Host:    el.СonfigurationManagement.FQDN,
 			User:    cfg.RosterTargetUser,
 			Port:    el.СonfigurationManagement.Port,
@@ -74,12 +79,15 @@ func main() {
 		}
 	}
 
+	// add service hosts to roster
 	for _, el := range serviceHostsList {
 		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		roster[el.GetServiceDeviceID(cfg.ServiceDevicesListSuffix)] = Target{
+		id := el.GetServiceDeviceID(cfg.ServiceDevicesListSuffix)
+
+		roster.Data[id] = Target{
 			Host:    el.СonfigurationManagement.FQDN,
 			User:    cfg.RosterTargetUser,
 			Port:    el.СonfigurationManagement.Port,
@@ -88,7 +96,7 @@ func main() {
 		}
 	}
 
-	b, err := yaml.Marshal(roster)
+	b, err := yaml.Marshal(roster.Data)
 	if err != nil {
 		fatal.Fatal(err)
 	}
