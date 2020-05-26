@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -47,8 +48,8 @@ func (s GetListResultObj) GetShortFQDN() string {
 	return GetShortFQDN(s.FQDN)
 }
 
-// GetFQDNWithOutPublicSuffix returns FQDN with public suffix stripped.
-func (s GetListResultObj) GetFQDNWithOutPublicSuffix() string {
+// GetFQDNWithoutPublicSuffix returns FQDN with public suffix stripped.
+func (s GetListResultObj) GetFQDNWithoutPublicSuffix() string {
 	return GetFQDNWithOutPublicSuffix(s.FQDN)
 }
 
@@ -69,4 +70,39 @@ func (s GetListResultObj) GetShortHostingContainerType() string {
 	default:
 		return defaultUndefinedShortTypeName
 	}
+}
+
+// GetHostingNodeID returns roster target ID for hosting node.
+func (s GetListResultObj) GetHostingNodeID(suff string) string {
+	return strings.TrimSuffix(
+		fmt.Sprintf(
+			"%s.%s",
+			s.GetFQDNWithoutPublicSuffix(),
+			suff,
+		), ".",
+	)
+}
+
+// GetHostingContainerID returns roster target ID for hosting container.
+func (s GetListResultObj) GetHostingContainerID(suff string) string {
+	return strings.TrimSuffix(
+		fmt.Sprintf(
+			"%s.%s.%s.%s",
+			s.GetShortFQDN(),
+			s.GetShortNodeFQDN(),
+			s.GetShortHostingContainerType(),
+			suff,
+		), ".",
+	)
+}
+
+// GetServiceDeviceID returns roster target ID for service host.
+func (s GetListResultObj) GetServiceDeviceID(suff string) string {
+	return strings.TrimSuffix(
+		fmt.Sprintf(
+			"%s.%s",
+			s.GetFQDNWithoutPublicSuffix(),
+			suff,
+		), ".",
+	)
 }

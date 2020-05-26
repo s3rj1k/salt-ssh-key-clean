@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
+	"log"
 
 	"github.com/s3rj1k/jrpc2/client"
 	"gopkg.in/yaml.v2"
@@ -14,6 +13,14 @@ func main() {
 	rpc := client.GetConfig(defaultRPCURL)
 	// set credentials
 	rpc.SetBasicAuth(defaultRPCBasicAuthUser, defaultRPCBasicAuthPass)
+
+	// create default application config
+	cfg := CreateDefaultConfig()
+
+	// read configuration data from environment
+	if err := cfg.ReadFromEnvironment(); err != nil {
+		log.Fatal(err)
+	}
 
 	// get list of hosting nodes
 	nodeList, err := GetNodeList(rpc, defaultRPCAccessKey)
@@ -33,12 +40,6 @@ func main() {
 		fatal.Fatal(err)
 	}
 
-	// seed default status skip list
-	hostStatusSkipList := make(map[string]struct{})
-	for _, el := range strings.Split(defaultHostStatusSkipList, ",") {
-		hostStatusSkipList[el] = struct{}{}
-	}
-
 	// roster data
 	roster := make(
 		map[string]Target,
@@ -46,75 +47,44 @@ func main() {
 	)
 
 	for _, el := range nodeList {
-		if el.Skip(hostStatusSkipList) {
+		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		id := fmt.Sprintf(
-			"%s.%s",
-			defaultNodeListSuffix,
-			el.GetFQDNWithOutPublicSuffix(),
-		)
-
-		roster[id] = Target{
-			Host: el.СonfigurationManagement.FQDN,
-			User: defaultRosterTargetUser,
-			Port: el.СonfigurationManagement.Port,
-			ThinDir: filepath.Join(
-				defaultRosterTargetThinDirPrefix,
-				defaultRosterTargetUser,
-				defaultRosterTargetThinDirSuffix,
-			) + "/",
-			Timeout: defaultRosterTargetTimeout,
+		roster[el.GetHostingNodeID(cfg.HostingNodeListSuffix)] = Target{
+			Host:    el.СonfigurationManagement.FQDN,
+			User:    cfg.RosterTargetUser,
+			Port:    el.СonfigurationManagement.Port,
+			ThinDir: cfg.GetRosterTargetThinDir(),
+			Timeout: cfg.RosterTargetTimeout,
 		}
 	}
 
 	for _, el := range containersList {
-		if el.Skip(hostStatusSkipList) {
+		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		id := fmt.Sprintf(
-			"%s.%s.%s",
-			el.GetShortFQDN(),
-			el.GetShortNodeFQDN(),
-			el.GetShortHostingContainerType(),
-		)
-
-		roster[id] = Target{
-			Host: el.СonfigurationManagement.FQDN,
-			User: defaultRosterTargetUser,
-			Port: el.СonfigurationManagement.Port,
-			ThinDir: filepath.Join(
-				defaultRosterTargetThinDirPrefix,
-				defaultRosterTargetUser,
-				defaultRosterTargetThinDirSuffix,
-			) + "/",
-			Timeout: defaultRosterTargetTimeout,
+		roster[el.GetHostingContainerID(cfg.HostingContainerListSuffix)] = Target{
+			Host:    el.СonfigurationManagement.FQDN,
+			User:    cfg.RosterTargetUser,
+			Port:    el.СonfigurationManagement.Port,
+			ThinDir: cfg.GetRosterTargetThinDir(),
+			Timeout: cfg.RosterTargetTimeout,
 		}
 	}
 
 	for _, el := range serviceHostsList {
-		if el.Skip(hostStatusSkipList) {
+		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		id := fmt.Sprintf(
-			"%s.%s",
-			defaultServiceDevicesListSuffix,
-			el.GetFQDNWithOutPublicSuffix(),
-		)
-
-		roster[id] = Target{
-			Host: el.СonfigurationManagement.FQDN,
-			User: defaultRosterTargetUser,
-			Port: el.СonfigurationManagement.Port,
-			ThinDir: filepath.Join(
-				defaultRosterTargetThinDirPrefix,
-				defaultRosterTargetUser,
-				defaultRosterTargetThinDirSuffix,
-			) + "/",
-			Timeout: defaultRosterTargetTimeout,
+		roster[el.GetServiceDeviceID(cfg.ServiceDevicesListSuffix)] = Target{
+			Host:    el.СonfigurationManagement.FQDN,
+			User:    cfg.RosterTargetUser,
+			Port:    el.СonfigurationManagement.Port,
+			ThinDir: cfg.GetRosterTargetThinDir(),
+			Timeout: cfg.RosterTargetTimeout,
 		}
 	}
 

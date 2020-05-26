@@ -1,28 +1,40 @@
 package main
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
 const (
 	defaultRPCURL = "https://internalrpc.mirohost.net/v1/"
-	// envKeyRPCURL  = "RPC_URL"
+	envKeyRPCURL  = "RPC_URL"
 
 	defaultRPCBasicAuthUser = "mirohost_test"
-	// envKeyRPCBasicAuthUser  = "BASIC_AUTH_USER"
+	envKeyRPCBasicAuthUser  = "BASIC_AUTH_USER"
 
 	defaultRPCBasicAuthPass = "809_VfghjlfK"
-	// envKeyRPCBasicAuthPass  = "BASIC_AUTH_PASS"
+	envKeyRPCBasicAuthPass  = "BASIC_AUTH_PASS"
 
 	defaultRPCAccessKey = "rdbmmzyycxv5LTj5GAL8eMibAyry/RtWV+RajHA3pMk="
-	// envKeyRPCAccessKey  = "ACCESS_KEY"
+	envKeyRPCAccessKey  = "ACCESS_KEY"
 
-	defaultProjectNameForGetListMethods = "mirohost"
-	// envKeyProjectNameForGetListMethods  = "PROJECT_NAME"
+	defaultRosterTargetTimeout = 300
+	envKeyRosterTargetTimeout  = "SSH_TIMEOUT"
+)
 
+const ( // intentionally unconfigurable in runtime
 	defaultRosterTargetUser          = "root"
 	defaultRosterTargetThinDirPrefix = "/"
 	defaultRosterTargetThinDirSuffix = "/salt/"
-	defaultRosterTargetTimeout       = 300
 
-	defaultNodeListSuffix           = "hosting"
-	defaultServiceDevicesListSuffix = "service"
+	defaultProjectNameForGetListMethods = "mirohost"
+
+	defaultHostingNodeListSuffix      = "hosting"
+	defaultHostingContainerListSuffix = ""
+	defaultServiceDevicesListSuffix   = "service"
 
 	defaultEVPSShortTypeName           = "vs"
 	defaultSharedHostingShortTypeName  = "sd"
@@ -32,8 +44,43 @@ const (
 	defaultHostStatusSkipList = "reserved,unused,deleted" // string slice separated by comma
 )
 
-/*
-type config struct {
+// CreateDefaultConfig creates default application config.
+func CreateDefaultConfig() *Config {
+	c := new(Config)
+
+	c.RPCURL = defaultRPCURL
+	c.RPCBasicAuthUser = defaultRPCBasicAuthUser
+	c.RPCBasicAuthPass = defaultRPCBasicAuthPass
+	c.RPCAccessKey = defaultRPCAccessKey
+
+	c.ProjectNameForGetListMethods = defaultProjectNameForGetListMethods
+
+	c.RosterTargetUser = defaultRosterTargetUser
+	c.RosterTargetThinDirPrefix = defaultRosterTargetThinDirPrefix
+	c.RosterTargetThinDirSuffix = defaultRosterTargetThinDirSuffix
+
+	c.RosterTargetTimeout = defaultRosterTargetTimeout
+
+	c.HostingNodeListSuffix = defaultHostingNodeListSuffix
+	c.HostingContainerListSuffix = defaultHostingContainerListSuffix
+	c.ServiceDevicesListSuffix = defaultServiceDevicesListSuffix
+
+	c.EVPSShortTypeName = defaultEVPSShortTypeName
+	c.SharedHostingShortTypeName = defaultSharedHostingShortTypeName
+	c.SmartDedicatedShortTypeName = defaultSmartDedicatedShortTypeName
+	c.UndefinedShortTypeName = defaultUndefinedShortTypeName
+
+	// seed default status skip list
+	c.HostStatusSkipList = make(map[string]struct{})
+	for _, el := range strings.Split(defaultHostStatusSkipList, ",") {
+		c.HostStatusSkipList[el] = struct{}{}
+	}
+
+	return c
+}
+
+// Config defines application configuration object.
+type Config struct {
 	RPCURL           string
 	RPCBasicAuthUser string
 	RPCBasicAuthPass string
@@ -41,12 +88,14 @@ type config struct {
 
 	ProjectNameForGetListMethods string
 
-	RosterTargetUser    string
-	RosterTargetThinDir string
-	RosterTargetTimeout string
+	RosterTargetUser          string
+	RosterTargetThinDirPrefix string
+	RosterTargetThinDirSuffix string
+	RosterTargetTimeout       int
 
-	NodeListSuffix           string
-	ServiceDevicesListSuffix string
+	HostingNodeListSuffix      string
+	HostingContainerListSuffix string
+	ServiceDevicesListSuffix   string
 
 	EVPSShortTypeName           string
 	SharedHostingShortTypeName  string
@@ -56,35 +105,49 @@ type config struct {
 	HostStatusSkipList map[string]struct{}
 }
 
-func (c *config) ReadFromEnvironment() {
+// ReadFromEnvironment reads configuration parameters from environment variables.
+func (c *Config) ReadFromEnvironment() error {
 	if val, ok := os.LookupEnv(envKeyRPCURL); ok {
+		if !strings.HasPrefix(val, "https://") || !strings.HasPrefix(val, "http://") {
+			return fmt.Errorf("config: invalid data (%s) for %s", val, envKeyRPCURL)
+		}
+
 		c.RPCURL = val
-	} else {
-		c.RPCURL = defaultRPCURL
 	}
 
 	if val, ok := os.LookupEnv(envKeyRPCBasicAuthUser); ok {
 		c.RPCBasicAuthUser = val
-	} else {
-		c.RPCBasicAuthUser = defaultRPCBasicAuthUser
 	}
 
 	if val, ok := os.LookupEnv(envKeyRPCBasicAuthPass); ok {
 		c.RPCBasicAuthPass = val
-	} else {
-		c.RPCBasicAuthPass = defaultRPCBasicAuthPass
 	}
 
 	if val, ok := os.LookupEnv(envKeyRPCAccessKey); ok {
 		c.RPCAccessKey = val
-	} else {
-		c.RPCAccessKey = defaultRPCAccessKey
 	}
 
-	if val, ok := os.LookupEnv(envKeyProjectNameForGetListMethods); ok {
-		c.ProjectNameForGetListMethods = val
-	} else {
-		c.ProjectNameForGetListMethods = defaultProjectNameForGetListMethods
+	if val, ok := os.LookupEnv(envKeyRosterTargetTimeout); ok {
+		i, err := strconv.Atoi(val)
+		if err != nil {
+			return fmt.Errorf("config: invalid data (%s) for %s", val, envKeyRosterTargetTimeout)
+		}
+
+		if i < 0 {
+			return fmt.Errorf("config: invalid data (%d) for %s", i, envKeyRosterTargetTimeout)
+		}
+
+		c.RosterTargetTimeout = i
 	}
+
+	return nil
 }
-*/
+
+// GetRosterTargetThinDir returns assembled roster 'thin_dir'.
+func (c *Config) GetRosterTargetThinDir() string {
+	return filepath.Join(
+		c.RosterTargetThinDirPrefix,
+		c.RosterTargetUser,
+		c.RosterTargetThinDirSuffix,
+	) + "/"
+}
