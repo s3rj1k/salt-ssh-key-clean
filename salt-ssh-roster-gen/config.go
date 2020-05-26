@@ -88,6 +88,8 @@ type Config struct {
 
 	ProjectNameForGetListMethods string
 
+	RosterFilePath string
+
 	RosterTargetUser          string
 	RosterTargetThinDirPrefix string
 	RosterTargetThinDirSuffix string
@@ -107,6 +109,14 @@ type Config struct {
 
 // ReadFromEnvironment reads configuration parameters from environment variables.
 func (c *Config) ReadFromEnvironment() error {
+	defer func() {
+		_ = os.Unsetenv(envKeyRPCURL)
+		_ = os.Unsetenv(envKeyRPCBasicAuthUser)
+		_ = os.Unsetenv(envKeyRPCBasicAuthPass)
+		_ = os.Unsetenv(envKeyRPCAccessKey)
+		_ = os.Unsetenv(envKeyRosterTargetTimeout)
+	}()
+
 	if val, ok := os.LookupEnv(envKeyRPCURL); ok {
 		if !strings.HasPrefix(val, "https://") || !strings.HasPrefix(val, "http://") {
 			return fmt.Errorf("config: invalid data (%s) for %s", val, envKeyRPCURL)

@@ -1,21 +1,41 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/s3rj1k/jrpc2/client"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
+	// create default application config
+	cfg := CreateDefaultConfig()
+
+	// path to generated roster file
+	flag.StringVar(&cfg.RosterFilePath, "roster", "/tmp/roster", "defines an location for the default roster file")
+
+	// custom help
+	flag.Usage = func() {
+		fmt.Printf("Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+
+		fmt.Printf("  environment variables:\n")
+		fmt.Printf("    %s - sets RPC endpoint URL\n", envKeyRPCURL)
+		fmt.Printf("    %s - sets RPC endpoint BasicAuth Username\n", envKeyRPCBasicAuthUser)
+		fmt.Printf("    %s - sets RPC endpoint BasicAuth Password\n", envKeyRPCBasicAuthPass)
+		fmt.Printf("    %s - sets RPC endpoint Access key\n", envKeyRPCAccessKey)
+		fmt.Printf("    %s - sets roster target ssh timeout\n", envKeyRosterTargetTimeout)
+	}
+
+	flag.Parse()
+
 	// create RPC client config
 	rpc := client.GetConfig(defaultRPCURL)
 	// set credentials
 	rpc.SetBasicAuth(defaultRPCBasicAuthUser, defaultRPCBasicAuthPass)
-
-	// create default application config
-	cfg := CreateDefaultConfig()
 
 	// read configuration data from environment
 	if err := cfg.ReadFromEnvironment(); err != nil {
