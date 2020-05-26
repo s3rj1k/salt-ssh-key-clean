@@ -12,13 +12,13 @@ const (
 	defaultRPCURL = "https://internalrpc.mirohost.net/v1/"
 	envKeyRPCURL  = "RPC_URL"
 
-	defaultRPCBasicAuthUser = "mirohost_test"
+	defaultRPCBasicAuthUser = "salt-ssh"
 	envKeyRPCBasicAuthUser  = "BASIC_AUTH_USER"
 
-	defaultRPCBasicAuthPass = "809_VfghjlfK"
+	defaultRPCBasicAuthPass = "OeCoo0koog7iecaf"
 	envKeyRPCBasicAuthPass  = "BASIC_AUTH_PASS"
 
-	defaultRPCAccessKey = "rdbmmzyycxv5LTj5GAL8eMibAyry/RtWV+RajHA3pMk="
+	defaultRPCAccessKey = "ivC8n+Ll3G9VJNaK4s5KEQiH1acpRTYDU7834eUwifc2"
 	envKeyRPCAccessKey  = "ACCESS_KEY"
 
 	defaultRosterTargetTimeout = 300
