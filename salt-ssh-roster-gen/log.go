@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
@@ -18,7 +18,7 @@ func init() {
 	// )
 
 	fatal = log.New(
-		ioutil.Discard,
+		os.Stderr,
 		"FTL:",
 		log.LstdFlags,
 	)
