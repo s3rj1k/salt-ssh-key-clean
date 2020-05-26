@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/s3rj1k/jrpc2/client"
-	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -116,10 +115,7 @@ func main() {
 		}
 	}
 
-	b, err := yaml.Marshal(roster.Data)
-	if err != nil {
+	if err := roster.SaveToFile(cfg.RosterFilePath); err != nil {
 		fatal.Fatal(err)
 	}
-
-	fmt.Println(string(b))
 }

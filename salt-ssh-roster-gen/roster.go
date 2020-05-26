@@ -1,5 +1,13 @@
 package main
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v2"
+)
+
 // Target describes single target element of salt-ssh roster.
 type Target struct {
 	Host    string `yaml:"host"`
@@ -23,4 +31,31 @@ func CreateNewRoster(cap int) *Roster {
 	)
 
 	return roster
+}
+
+// SaveToFile writes YAML encoded roster data to file.
+func (r *Roster) SaveToFile(path string) error {
+	path = filepath.Clean(path)
+
+	// create file or open as RW
+	fd, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("roster error: %w", err)
+	}
+
+	// close fd on exit
+	defer fd.Close()
+
+	// create new encoder
+	enc := yaml.NewEncoder(fd)
+
+	// flush data
+	defer enc.Close()
+
+	// encode to fd
+	if err := enc.Encode(r.Data); err != nil {
+		return fmt.Errorf("roster error: %w", err)
+	}
+
+	return nil
 }
