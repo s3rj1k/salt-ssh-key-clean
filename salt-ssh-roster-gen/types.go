@@ -36,12 +36,12 @@ type GetListResultInnerObj struct {
 	} `json:"configurationManagement"`
 
 	IP []struct {
-		VlanID int    `yaml:"vlanID,omitempty"`
-		IP     net.IP `yaml:"ip"`
-	} `yaml:"ip,omitempty"`
+		VlanID int    `json:"vlanID,omitempty"`
+		IP     net.IP `json:"ip"`
+	} `json:"ip,omitempty"`
 
 	// THIS IS A HACK !!!
-	V6Hextet string `yaml:"v6Hextet"`
+	IPV6Hextet string `json:"v6Hextet"`
 }
 
 // GetListResultObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList result object.
