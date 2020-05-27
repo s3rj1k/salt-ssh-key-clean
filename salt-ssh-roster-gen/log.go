@@ -1,21 +1,23 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 var (
-	// debug *log.Logger
+	debug *log.Logger
 	fatal *log.Logger
 )
 
 func init() {
-	// debug = log.New(
-	// 	ioutil.Discard,
-	// 	"DBG:",
-	// 	log.LstdFlags|log.Lshortfile,
-	// )
+	debug = log.New(
+		ioutil.Discard,
+		"DBG:",
+		log.LstdFlags|log.Lshortfile,
+	)
 
 	fatal = log.New(
 		os.Stderr,
@@ -23,7 +25,7 @@ func init() {
 		log.LstdFlags,
 	)
 
-	// if strings.EqualFold(os.Getenv("DEBUG"), "TRUE") {
-	// 	debug.SetOutput(os.Stderr)
-	// }
+	if strings.EqualFold(os.Getenv("DEBUG"), "TRUE") {
+		debug.SetOutput(os.Stderr)
+	}
 }

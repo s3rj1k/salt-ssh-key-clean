@@ -16,11 +16,13 @@ type GetListParamsObj struct {
 	Project   string `json:"project,omitempty"`
 }
 
-// GetListResultObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList single element of result object.
-type GetListResultObj struct {
+// GetListResultInnerObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList single element of result object.
+type GetListResultInnerObj struct {
+	CTID *string `json:"ctid,omitempty"`
+	Node string  `json:"node,omitempty"`
+	Type string  `json:"type,omitempty"`
+
 	FQDN   string `json:"fqdn"`
-	Node   string `json:"node,omitempty"`
-	Type   string `json:"type,omitempty"`
 	Status string `json:"status"`
 
 	СonfigurationManagement struct {
@@ -30,8 +32,27 @@ type GetListResultObj struct {
 	} `json:"configurationManagement"`
 }
 
+// GetListResultObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList result object.
+type GetListResultObj struct {
+	Data   []GetListResultInnerObj
+	Method string
+}
+
+// GetCombinedRoles returns target roles.
+func (s GetListResultInnerObj) GetCombinedRoles(roles ...string) []string {
+	if s.CTID == nil {
+		roles = append(roles, "physical")
+	} else {
+		roles = append(roles, "virtual")
+	}
+
+	roles = append(roles, s.Type)
+
+	return FilterStringSlice(roles)
+}
+
 // Skip is used for filtering out invalid roster targets.
-func (s GetListResultObj) Skip(skip map[string]struct{}) bool {
+func (s GetListResultInnerObj) Skip(skip map[string]struct{}) bool {
 	if _, ok := skip[s.Status]; ok {
 		return true
 	}
@@ -44,22 +65,22 @@ func (s GetListResultObj) Skip(skip map[string]struct{}) bool {
 }
 
 // GetShortFQDN returns short FQDN of a target.
-func (s GetListResultObj) GetShortFQDN() string {
+func (s GetListResultInnerObj) GetShortFQDN() string {
 	return GetShortFQDN(s.FQDN)
 }
 
 // GetFQDNWithoutPublicSuffix returns FQDN with public suffix stripped.
-func (s GetListResultObj) GetFQDNWithoutPublicSuffix() string {
+func (s GetListResultInnerObj) GetFQDNWithoutPublicSuffix() string {
 	return GetFQDNWithOutPublicSuffix(s.FQDN)
 }
 
 // GetShortNodeFQDN returns short node FQDN of a target.
-func (s GetListResultObj) GetShortNodeFQDN() string {
+func (s GetListResultInnerObj) GetShortNodeFQDN() string {
 	return GetShortFQDN(s.Node)
 }
 
 // GetShortHostingContainerType returns short type of hosting container
-func (s GetListResultObj) GetShortHostingContainerType() string {
+func (s GetListResultInnerObj) GetShortHostingContainerType() string {
 	switch strings.ToLower(strings.TrimSpace(s.Type)) {
 	case "vps":
 		return defaultEVPSShortTypeName
@@ -73,7 +94,7 @@ func (s GetListResultObj) GetShortHostingContainerType() string {
 }
 
 // GetHostingNodeID returns roster target ID for hosting node.
-func (s GetListResultObj) GetHostingNodeID(suff string) string {
+func (s GetListResultInnerObj) GetHostingNodeID(suff string) string {
 	return strings.TrimSuffix(
 		fmt.Sprintf(
 			"%s.%s",
@@ -84,7 +105,7 @@ func (s GetListResultObj) GetHostingNodeID(suff string) string {
 }
 
 // GetHostingContainerID returns roster target ID for hosting container.
-func (s GetListResultObj) GetHostingContainerID(suff string) string {
+func (s GetListResultInnerObj) GetHostingContainerID(suff string) string {
 	return strings.TrimSuffix(
 		fmt.Sprintf(
 			"%s.%s.%s.%s",
@@ -97,7 +118,7 @@ func (s GetListResultObj) GetHostingContainerID(suff string) string {
 }
 
 // GetServiceDeviceID returns roster target ID for service host.
-func (s GetListResultObj) GetServiceDeviceID(suff string) string {
+func (s GetListResultInnerObj) GetServiceDeviceID(suff string) string {
 	return strings.TrimSuffix(
 		fmt.Sprintf(
 			"%s.%s",
@@ -105,4 +126,32 @@ func (s GetListResultObj) GetServiceDeviceID(suff string) string {
 			suff,
 		), ".",
 	)
+}
+
+// GetID is a wrapper function to get target ID based on called method.
+func (s GetListResultInnerObj) GetID(cfg *Config, method string) (string, error) {
+	switch method {
+	case GetServiceDevicesListMethodName:
+		return s.GetServiceDeviceID(cfg.ServiceDevicesListSuffix), nil
+	case GetNodeListMethodName:
+		return s.GetHostingNodeID(cfg.HostingNodeListSuffix), nil
+	case GetContainersListMethodName:
+		return s.GetHostingContainerID(cfg.HostingContainerListSuffix), nil
+	}
+
+	return "", fmt.Errorf("unknown RPC method: %s", method)
+}
+
+// GetRoles is a wrapper function to get list of roles for a target based on called method.
+func (s GetListResultInnerObj) GetRoles(cfg *Config, method string) ([]string, error) {
+	switch method {
+	case GetServiceDevicesListMethodName:
+		return s.GetCombinedRoles(cfg.ServiceDevicesListSuffix), nil
+	case GetNodeListMethodName:
+		return s.GetCombinedRoles(cfg.HostingNodeListSuffix), nil
+	case GetContainersListMethodName:
+		return s.GetCombinedRoles(cfg.HostingContainerListSuffix), nil
+	}
+
+	return nil, fmt.Errorf("unknown RPC method: %s", method)
 }

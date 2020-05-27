@@ -5,10 +5,11 @@ import (
 	"os"
 )
 
-func init() {
+// CheckIfRunUnderRoot returns error when application has no root access.
+func CheckIfRunUnderRoot() error {
 	if os.Getuid() != 0 {
-		fmt.Fprintf(os.Stderr, "%s needs to be run as root!\n", os.Args[0])
-
-		os.Exit(1)
+		return fmt.Errorf("%s needs to be run as root", os.Args[0])
 	}
+
+	return nil
 }

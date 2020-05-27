@@ -10,11 +10,32 @@ import (
 
 // Target describes single target element of salt-ssh roster.
 type Target struct {
-	Host    string `yaml:"host"`
-	User    string `yaml:"user"`
-	Port    int    `yaml:"port"`
-	ThinDir string `yaml:"thin_dir"`
-	Timeout int    `yaml:"timeout"`
+	Host       string `yaml:"host"`
+	User       string `yaml:"user"`
+	Port       int    `yaml:"port"`
+	ThinDir    string `yaml:"thin_dir"`
+	Timeout    int    `yaml:"timeout"`
+	MinionOpts struct {
+		Grains struct {
+			Roles []string `yaml:"roles"`
+		} `yaml:"grains"`
+	} `yaml:"minion_opts"`
+}
+
+// CreateTarget returns roster target objected created from input data.
+func CreateTarget(el GetListResultInnerObj, cfg *Config, roles ...string) Target {
+	var t Target
+
+	t.Host = el.СonfigurationManagement.FQDN
+	t.User = cfg.RosterTargetUser
+	t.Port = el.СonfigurationManagement.Port
+	t.ThinDir = cfg.GetRosterTargetThinDir()
+	t.Timeout = cfg.RosterTargetTimeout
+
+	roles = append(roles, el.Type)
+	t.MinionOpts.Grains.Roles = FilterStringSlice(roles)
+
+	return t
 }
 
 // Roster describes full list of targets inside roster.

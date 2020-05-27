@@ -3,13 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/s3rj1k/jrpc2/client"
 )
 
 func main() {
+	if err := CheckIfRunUnderRoot(); err != nil {
+		fatal.Fatal(err)
+	}
+
 	// create default application config
 	cfg := CreateDefaultConfig()
 
@@ -27,6 +30,7 @@ func main() {
 		fmt.Printf("    %s - sets RPC endpoint BasicAuth Password\n", envKeyRPCBasicAuthPass)
 		fmt.Printf("    %s - sets RPC endpoint Access key\n", envKeyRPCAccessKey)
 		fmt.Printf("    %s - sets roster target ssh timeout\n", envKeyRosterTargetTimeout)
+		fmt.Printf("    DEBUG = TRUE - sets debug logging\n")
 	}
 
 	flag.Parse()
@@ -38,7 +42,7 @@ func main() {
 
 	// read configuration data from environment
 	if err := cfg.ReadFromEnvironment(); err != nil {
-		log.Fatal(err)
+		fatal.Fatal(err)
 	}
 
 	// get list of hosting nodes
@@ -61,58 +65,76 @@ func main() {
 
 	// roster data
 	roster := CreateNewRoster(
-		len(hostingNodeList) + len(hostingContainersList) + len(serviceHostsList),
+		len(hostingNodeList.Data) + len(hostingContainersList.Data) + len(serviceHostsList.Data),
 	)
 
 	// add hosting nodes to roster
-	for _, el := range hostingNodeList {
+	for _, el := range hostingNodeList.Data {
 		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		id := el.GetHostingNodeID(cfg.HostingNodeListSuffix)
+		id, err := el.GetID(cfg, hostingNodeList.Method)
+		if err != nil {
+			debug.Println(err)
 
-		roster.Data[id] = Target{
-			Host:    el.СonfigurationManagement.FQDN,
-			User:    cfg.RosterTargetUser,
-			Port:    el.СonfigurationManagement.Port,
-			ThinDir: cfg.GetRosterTargetThinDir(),
-			Timeout: cfg.RosterTargetTimeout,
+			continue
 		}
+
+		roles, err := el.GetRoles(cfg, hostingNodeList.Method)
+		if err != nil {
+			debug.Println(err)
+
+			continue
+		}
+
+		roster.Data[id] = CreateTarget(el, cfg, roles...)
 	}
 
 	// add hosting containers to roster
-	for _, el := range hostingContainersList {
+	for _, el := range hostingContainersList.Data {
 		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		id := el.GetHostingContainerID(cfg.HostingContainerListSuffix)
+		id, err := el.GetID(cfg, hostingContainersList.Method)
+		if err != nil {
+			debug.Println(err)
 
-		roster.Data[id] = Target{
-			Host:    el.СonfigurationManagement.FQDN,
-			User:    cfg.RosterTargetUser,
-			Port:    el.СonfigurationManagement.Port,
-			ThinDir: cfg.GetRosterTargetThinDir(),
-			Timeout: cfg.RosterTargetTimeout,
+			continue
 		}
+
+		roles, err := el.GetRoles(cfg, hostingContainersList.Method)
+		if err != nil {
+			debug.Println(err)
+
+			continue
+		}
+
+		roster.Data[id] = CreateTarget(el, cfg, roles...)
 	}
 
 	// add service hosts to roster
-	for _, el := range serviceHostsList {
+	for _, el := range serviceHostsList.Data {
 		if el.Skip(cfg.HostStatusSkipList) {
 			continue
 		}
 
-		id := el.GetServiceDeviceID(cfg.ServiceDevicesListSuffix)
+		id, err := el.GetID(cfg, serviceHostsList.Method)
+		if err != nil {
+			debug.Println(err)
 
-		roster.Data[id] = Target{
-			Host:    el.СonfigurationManagement.FQDN,
-			User:    cfg.RosterTargetUser,
-			Port:    el.СonfigurationManagement.Port,
-			ThinDir: cfg.GetRosterTargetThinDir(),
-			Timeout: cfg.RosterTargetTimeout,
+			continue
 		}
+
+		roles, err := el.GetRoles(cfg, serviceHostsList.Method)
+		if err != nil {
+			debug.Println(err)
+
+			continue
+		}
+
+		roster.Data[id] = CreateTarget(el, cfg, roles...)
 	}
 
 	if err := roster.SaveToFile(cfg.RosterFilePath); err != nil {

@@ -37,9 +37,19 @@ curl -X POST https://internalrpc.mirohost.net/v1/ -u user:password -H "Content-T
 
 */
 
-func getListWrapper(c *client.Config, key, method, project string) ([]GetListResultObj, error) {
+// List of RPC method names
+const (
+	GetServiceDevicesListMethodName = "getServiceDevicesList"
+	GetNodeListMethodName           = "getNodesList"
+	GetContainersListMethodName     = "getContainersList"
+)
+
+func getListWrapper(c *client.Config, key, method, project string) (GetListResultObj, error) {
 	// prepare results object
-	resultObj := make([]GetListResultObj, 0)
+	resultObj := GetListResultObj{
+		Data:   make([]GetListResultInnerObj, 0),
+		Method: method,
+	}
 
 	// JSON-RPC params field
 	paramsObj := GetListParamsObj{
@@ -73,7 +83,7 @@ func getListWrapper(c *client.Config, key, method, project string) ([]GetListRes
 	}
 
 	// decode result
-	if err = json.Unmarshal(resultRawData, &resultObj); err != nil {
+	if err = json.Unmarshal(resultRawData, &resultObj.Data); err != nil {
 		return resultObj, fmt.Errorf("method=%s result error: %s", method, err.Error())
 	}
 
@@ -81,16 +91,16 @@ func getListWrapper(c *client.Config, key, method, project string) ([]GetListRes
 }
 
 // GetServiceDevicesList calls remote JSON-RPC server to get list of service hosts (physical and virtual).
-func GetServiceDevicesList(c *client.Config, key, project string) ([]GetListResultObj, error) {
-	return getListWrapper(c, key, "getServiceDevicesList", project)
+func GetServiceDevicesList(c *client.Config, key, project string) (GetListResultObj, error) {
+	return getListWrapper(c, key, GetServiceDevicesListMethodName, project)
 }
 
 // GetNodeList calls remote JSON-RPC server to get list of hosting nodes.
-func GetNodeList(c *client.Config, key string) ([]GetListResultObj, error) {
-	return getListWrapper(c, key, "getNodesList", "")
+func GetNodeList(c *client.Config, key string) (GetListResultObj, error) {
+	return getListWrapper(c, key, GetNodeListMethodName, "")
 }
 
 // GetContainersList calls remote JSON-RPC server to get list of hosting containers.
-func GetContainersList(c *client.Config, key string) ([]GetListResultObj, error) {
-	return getListWrapper(c, key, "getContainersList", "")
+func GetContainersList(c *client.Config, key string) (GetListResultObj, error) {
+	return getListWrapper(c, key, GetContainersListMethodName, "")
 }
