@@ -150,7 +150,7 @@ func (s GetListResultInnerObj) GetRoles(cfg *Config, method string) ([]string, e
 	case GetNodeListMethodName:
 		return s.GetCombinedRoles(cfg.HostingNodeListSuffix), nil
 	case GetContainersListMethodName:
-		return s.GetCombinedRoles(cfg.HostingContainerListSuffix), nil
+		return s.GetCombinedRoles(cfg.HostingContainerListSuffix, cfg.HostingNodeListSuffix), nil
 	}
 
 	return nil, fmt.Errorf("unknown RPC method: %s", method)

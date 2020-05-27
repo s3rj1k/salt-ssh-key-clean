@@ -68,74 +68,38 @@ func main() {
 		len(hostingNodeList.Data) + len(hostingContainersList.Data) + len(serviceHostsList.Data),
 	)
 
-	// add hosting nodes to roster
-	for _, el := range hostingNodeList.Data {
-		if el.Skip(cfg.HostStatusSkipList) {
-			continue
+	f := func(list GetListResultObj, cfg *Config, roster *Roster) {
+		for _, el := range list.Data {
+			if el.Skip(cfg.HostStatusSkipList) {
+				continue
+			}
+
+			id, err := el.GetID(cfg, list.Method)
+			if err != nil {
+				debug.Println(err)
+
+				continue
+			}
+
+			roles, err := el.GetRoles(cfg, list.Method)
+			if err != nil {
+				debug.Println(err)
+
+				continue
+			}
+
+			roster.Data[id] = CreateTarget(el, cfg, roles...)
 		}
-
-		id, err := el.GetID(cfg, hostingNodeList.Method)
-		if err != nil {
-			debug.Println(err)
-
-			continue
-		}
-
-		roles, err := el.GetRoles(cfg, hostingNodeList.Method)
-		if err != nil {
-			debug.Println(err)
-
-			continue
-		}
-
-		roster.Data[id] = CreateTarget(el, cfg, roles...)
 	}
+
+	// add hosting nodes to roster
+	f(hostingNodeList, cfg, roster)
 
 	// add hosting containers to roster
-	for _, el := range hostingContainersList.Data {
-		if el.Skip(cfg.HostStatusSkipList) {
-			continue
-		}
-
-		id, err := el.GetID(cfg, hostingContainersList.Method)
-		if err != nil {
-			debug.Println(err)
-
-			continue
-		}
-
-		roles, err := el.GetRoles(cfg, hostingContainersList.Method)
-		if err != nil {
-			debug.Println(err)
-
-			continue
-		}
-
-		roster.Data[id] = CreateTarget(el, cfg, roles...)
-	}
+	f(hostingContainersList, cfg, roster)
 
 	// add service hosts to roster
-	for _, el := range serviceHostsList.Data {
-		if el.Skip(cfg.HostStatusSkipList) {
-			continue
-		}
-
-		id, err := el.GetID(cfg, serviceHostsList.Method)
-		if err != nil {
-			debug.Println(err)
-
-			continue
-		}
-
-		roles, err := el.GetRoles(cfg, serviceHostsList.Method)
-		if err != nil {
-			debug.Println(err)
-
-			continue
-		}
-
-		roster.Data[id] = CreateTarget(el, cfg, roles...)
-	}
+	f(serviceHostsList, cfg, roster)
 
 	if err := roster.SaveToFile(cfg.RosterFilePath); err != nil {
 		fatal.Fatal(err)
