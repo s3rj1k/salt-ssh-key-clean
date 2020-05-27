@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,14 @@ import (
 const (
 	IgnoreBackupTargetInRosterTargetValue = "UNKNOWN"
 )
+
+// IPRecord describes IP VLAN relation.
+type IPRecord struct {
+	IP     net.IP `yaml:"IPv4"`
+	IsIPv4 bool   `yaml:"IsIPv4"`
+	IsIPv6 bool   `yaml:"IsIPv6"`
+	VLANID int    `yaml:"VLANID,omitempty"`
+}
 
 // Target describes single target element of salt-ssh roster.
 type Target struct {
@@ -34,6 +43,12 @@ type Target struct {
 				Target        string `yaml:"target"`
 				CreateBackups bool   `yaml:"createBackups"`
 			} `yaml:"backup,omitempty"`
+
+			Network struct {
+				IP []IPRecord `yaml:"IP,omitempty"`
+
+				IPv6Hextet string `yaml:"v6Hextet"`
+			} `yaml:"network"`
 		} `yaml:"grains"`
 	} `yaml:"minion_opts"`
 }
@@ -42,24 +57,43 @@ type Target struct {
 func CreateTarget(el GetListResultInnerObj, cfg *Config, roles ...string) Target {
 	var t Target
 
-	t.Host = el.СonfigurationManagement.FQDN
+	t.Host = strings.TrimSpace(el.СonfigurationManagement.FQDN)
 	t.User = cfg.RosterTargetUser
 	t.Port = el.СonfigurationManagement.Port
 	t.ThinDir = cfg.GetRosterTargetThinDir()
 	t.Timeout = cfg.RosterTargetTimeout
 
-	roles = append(roles, el.Type)
+	roles = append(roles, strings.TrimSpace(el.Type))
 	t.MinionOpts.Grains.Roles = FilterStringSlice(roles)
 
 	if el.CTID != nil {
-		t.MinionOpts.Grains.Virtual.CTID = *el.CTID
-		t.MinionOpts.Grains.Virtual.Parent = el.Node
+		t.MinionOpts.Grains.Virtual.CTID = strings.TrimSpace(*el.CTID)
+		t.MinionOpts.Grains.Virtual.Parent = strings.TrimSpace(el.Node)
 	}
 
-	if !strings.EqualFold(el.Backup, IgnoreBackupTargetInRosterTargetValue) {
-		t.MinionOpts.Grains.Backup.Target = el.Backup
+	if !strings.EqualFold(strings.TrimSpace(el.Backup), IgnoreBackupTargetInRosterTargetValue) {
+		t.MinionOpts.Grains.Backup.Target = strings.TrimSpace(el.Backup)
 		t.MinionOpts.Grains.Backup.CreateBackups = el.CreateBackups
 	}
+
+	ip := make([]IPRecord, 0, len(el.IP))
+
+	for _, el := range el.IP {
+		if el.IP == nil {
+			continue
+		}
+
+		ip = append(ip, IPRecord{
+			IP:     el.IP,
+			IsIPv4: IsIPv4(el.IP),
+			IsIPv6: IsIPv6(el.IP),
+			VLANID: el.VlanID,
+		})
+	}
+
+	t.MinionOpts.Grains.Network.IP = ip
+
+	t.MinionOpts.Grains.Network.IPv6Hextet = strings.TrimSpace(el.IPv6Hextet)
 
 	return t
 }

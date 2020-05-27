@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"strings"
 )
 
@@ -33,6 +34,14 @@ type GetListResultInnerObj struct {
 		FQDN    string `json:"fqdn"`
 		Port    int    `json:"port"`
 	} `json:"configurationManagement"`
+
+	IP []struct {
+		VlanID int    `yaml:"vlanID,omitempty"`
+		IP     net.IP `yaml:"ip"`
+	} `yaml:"ip,omitempty"`
+
+	// THIS IS A HACK !!!
+	IPv6Hextet string `yaml:"v6Hextet"`
 }
 
 // GetListResultObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList result object.
