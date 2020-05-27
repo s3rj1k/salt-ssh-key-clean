@@ -4,8 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
+)
+
+// Roster target related constants
+const (
+	IgnoreBackupTargetInRosterTargetValue = "UNKNOWN"
 )
 
 // Target describes single target element of salt-ssh roster.
@@ -50,8 +56,10 @@ func CreateTarget(el GetListResultInnerObj, cfg *Config, roles ...string) Target
 		t.MinionOpts.Grains.Virtual.Parent = el.Node
 	}
 
-	t.MinionOpts.Grains.Backup.Target = el.Backup
-	t.MinionOpts.Grains.Backup.CreateBackups = el.CreateBackups
+	if !strings.EqualFold(el.Backup, IgnoreBackupTargetInRosterTargetValue) {
+		t.MinionOpts.Grains.Backup.Target = el.Backup
+		t.MinionOpts.Grains.Backup.CreateBackups = el.CreateBackups
+	}
 
 	return t
 }
