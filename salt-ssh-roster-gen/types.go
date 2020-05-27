@@ -25,6 +25,9 @@ type GetListResultInnerObj struct {
 	FQDN   string `json:"fqdn"`
 	Status string `json:"status"`
 
+	Backup        string `json:"backup,omitempty"`
+	CreateBackups bool   `json:"createBackups,omitempty"`
+
 	СonfigurationManagement struct {
 		Enabled bool   `json:"enabled"`
 		FQDN    string `json:"fqdn"`

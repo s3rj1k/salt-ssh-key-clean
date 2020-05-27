@@ -18,6 +18,16 @@ type Target struct {
 	MinionOpts struct {
 		Grains struct {
 			Roles []string `yaml:"roles"`
+
+			Virtual struct {
+				Parent string `yaml:"parent"`
+				CTID   string `yaml:"ctid"`
+			} `yaml:"virtual,omitempty"`
+
+			Backup struct {
+				Target        string `yaml:"target"`
+				CreateBackups bool   `yaml:"createBackups"`
+			} `yaml:"backup,omitempty"`
 		} `yaml:"grains"`
 	} `yaml:"minion_opts"`
 }
@@ -34,6 +44,14 @@ func CreateTarget(el GetListResultInnerObj, cfg *Config, roles ...string) Target
 
 	roles = append(roles, el.Type)
 	t.MinionOpts.Grains.Roles = FilterStringSlice(roles)
+
+	if el.CTID != nil {
+		t.MinionOpts.Grains.Virtual.CTID = *el.CTID
+		t.MinionOpts.Grains.Virtual.Parent = el.Node
+	}
+
+	t.MinionOpts.Grains.Backup.Target = el.Backup
+	t.MinionOpts.Grains.Backup.CreateBackups = el.CreateBackups
 
 	return t
 }
