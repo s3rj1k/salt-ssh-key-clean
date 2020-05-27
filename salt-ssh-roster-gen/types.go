@@ -41,7 +41,7 @@ type GetListResultInnerObj struct {
 	} `yaml:"ip,omitempty"`
 
 	// THIS IS A HACK !!!
-	IPv6Hextet string `yaml:"v6Hextet"`
+	V6Hextet string `yaml:"v6Hextet"`
 }
 
 // GetListResultObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList result object.

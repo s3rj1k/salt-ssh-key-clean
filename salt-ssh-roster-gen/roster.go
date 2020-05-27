@@ -93,7 +93,7 @@ func CreateTarget(el GetListResultInnerObj, cfg *Config, roles ...string) Target
 
 	t.MinionOpts.Grains.Network.IP = ip
 
-	t.MinionOpts.Grains.Network.IPv6Hextet = strings.TrimSpace(el.IPv6Hextet)
+	t.MinionOpts.Grains.Network.IPv6Hextet = strings.TrimSpace(el.V6Hextet)
 
 	return t
 }
