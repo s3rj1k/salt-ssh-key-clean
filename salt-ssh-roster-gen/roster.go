@@ -17,7 +17,7 @@ const (
 
 // IPRecord describes IP VLAN relation.
 type IPRecord struct {
-	IP     net.IP `yaml:"IPv4"`
+	IP     net.IP `yaml:"IP"`
 	IsIPv4 bool   `yaml:"IsIPv4"`
 	IsIPv6 bool   `yaml:"IsIPv6"`
 	VLANID int    `yaml:"VLANID,omitempty"`
