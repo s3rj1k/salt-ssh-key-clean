@@ -1,6 +1,6 @@
 GO_BIN ?= go
 ENV_BIN ?= env
-OUT_BIN = test
+OUT_BIN = salt-ssh-key-clean
 
 export PATH := $(PATH):/usr/local/go/bin
 
@@ -18,7 +18,7 @@ update:
 
 clean:
 	$(GO_BIN) clean
-	rm -f $(OUT_BIN) 
+	rm -f $(OUT_BIN)
 
 test:
 	$(GO_BIN) test -failfast ./...

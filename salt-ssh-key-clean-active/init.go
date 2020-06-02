@@ -42,4 +42,8 @@ func init() {
 	if sshPath, err = exec.LookPath("ssh"); err != nil {
 		fatal.Fatalf("ssh binary not found!\n")
 	}
+
+	if sshKeyScanBinPath, err = exec.LookPath("ssh-keyscan"); err != nil {
+		fatal.Fatalf("ssh-keyscan binary not found!\n")
+	}
 }
