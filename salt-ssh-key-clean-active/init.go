@@ -22,7 +22,7 @@ func init() {
 		log.LstdFlags,
 	)
 
-	critical = log.New(
+	info = log.New(
 		os.Stdout,
 		"[NFO] ",
 		log.LstdFlags,
