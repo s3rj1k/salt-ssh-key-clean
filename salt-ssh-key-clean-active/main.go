@@ -41,11 +41,15 @@ func main() {
 	}
 
 	defer func(f *os.File) {
-		if err := f.Sync(); err != nil {
-			critical.Printf("known_hosts: %s\n", err)
-		}
-		if err := f.Close(); err != nil {
-			fatal.Fatalf("known_hosts: %s\n", err)
+		if f != nil {
+			if f.Fd() != uintptr(^uint(0)) { // checks that Fd is still valid (0xffffffffffffffff), https://man7.org/linux/man-pages/man2/eventfd.2.html
+				if err := f.Sync(); err != nil {
+					critical.Printf("known_hosts: %s\n", err)
+				}
+				if err := f.Close(); err != nil {
+					fatal.Fatalf("known_hosts: %s\n", err)
+				}
+			}
 		}
 	}(f)
 
@@ -58,5 +62,23 @@ func main() {
 				fatal.Fatalf("known_hosts: %s\n", err)
 			}
 		}
+	}
+
+	if err := f.Sync(); err != nil {
+		critical.Printf("known_hosts: %s\n", err)
+	}
+
+	newKnownHostsPath := f.Name()
+
+	if err := f.Close(); err != nil {
+		fatal.Fatalf("known_hosts: %s\n", err)
+	}
+
+	if err := os.Rename(cmdKnownHostsFilePath, cmdKnownHostsFilePath+".old"); err != nil {
+		fatal.Fatalf("known_hosts: %s\n", err)
+	}
+
+	if err := os.Rename(newKnownHostsPath, cmdKnownHostsFilePath); err != nil {
+		fatal.Fatalf("known_hosts: %s\n", err)
 	}
 }

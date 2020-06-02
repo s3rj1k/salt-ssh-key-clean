@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	timeout        = 5
+	timeout        = 30
 	defaultSSHPort = 22
 )
 
