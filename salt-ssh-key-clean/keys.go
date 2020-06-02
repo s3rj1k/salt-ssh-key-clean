@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -95,7 +94,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 		return nil
 	}
 
-	return deDuplicateKnownHosts(out)
+	return out
 }
 
 func sshKeyFind(host string, port int, knownHostsPath string) []knownHost {
@@ -174,33 +173,6 @@ func toKnownHosts(readers ...io.Reader) <-chan knownHost {
 	return out
 }
 
-// https://github.com/golang/go/wiki/SliceTricks#in-place-deduplicate-comparable
-func deDuplicateKnownHosts(s []knownHost) []knownHost {
-	if len(s) == 0 {
-		return nil
-	}
-
-	sort.Slice(
-		s, func(i, j int) bool {
-			return s[i].KeyWithType() < s[j].KeyWithType()
-		},
-	)
-
-	j := 0
-
-	for i := 1; i < len(s); i++ {
-		if s[i].KeyWithType() == s[j].KeyWithType() {
-			continue
-		}
-
-		j++
-
-		s[j] = s[i]
-	}
-
-	return s[:j+1]
-}
-
 func intersectKnownHosts(left, right []knownHost) []knownHost {
 	if len(left) == 0 || len(right) == 0 {
 		return nil
@@ -208,13 +180,10 @@ func intersectKnownHosts(left, right []knownHost) []knownHost {
 
 	intersected := make([]knownHost, 0, len(left)+len(right))
 
-outer:
-	for i := range deDuplicateKnownHosts(left) {
-		for j := range deDuplicateKnownHosts(right) {
+	for i := range left {
+		for j := range right {
 			if left[i].KeyWithType() == right[j].KeyWithType() {
 				intersected = append(intersected, left[i])
-
-				continue outer
 			}
 		}
 	}

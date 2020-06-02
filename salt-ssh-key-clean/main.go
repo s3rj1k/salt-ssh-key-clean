@@ -34,9 +34,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	worker(
+	hosts := worker(
 		cmdNumberOfConcurentJobs,
 		targets,
 		cmdKnownHostsFilePath,
 	)
+
+	for i := range hosts {
+		fmt.Printf("%v\n", hosts[i])
+	}
 }
