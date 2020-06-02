@@ -114,7 +114,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 	return out
 }
 
-func testPing(key, host, user string, port int) bool {
+func testActivePing(key, host, user string, port int) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 

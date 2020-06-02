@@ -10,6 +10,7 @@ import (
 
 var (
 	debug    *log.Logger
+	info     *log.Logger
 	critical *log.Logger
 	fatal    *log.Logger
 )
@@ -18,19 +19,25 @@ func init() {
 	debug = log.New(
 		ioutil.Discard,
 		"[DBG] ",
-		0,
+		log.LstdFlags,
+	)
+
+	critical = log.New(
+		os.Stdout,
+		"[NFO] ",
+		log.LstdFlags,
 	)
 
 	critical = log.New(
 		os.Stderr,
 		"[CRT] ",
-		0,
+		log.LstdFlags,
 	)
 
 	fatal = log.New(
 		os.Stderr,
 		"[FTL] ",
-		0,
+		log.LstdFlags,
 	)
 
 	if strings.EqualFold(os.Getenv("DEBUG"), "TRUE") {
