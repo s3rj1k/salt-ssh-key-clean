@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -27,6 +26,10 @@ func (s knownHost) String() string {
 	return fmt.Sprintf("%s %s %s", s.Host, s.Type, s.PubKey)
 }
 
+func (s knownHost) StringLn() string {
+	return s.String() + "\n"
+}
+
 func (s knownHost) KeyWithType() string {
 	return fmt.Sprintf("%s %s", s.Type, s.PubKey)
 }
@@ -35,22 +38,6 @@ var (
 	sshKeyScanBinPath string
 	sshKeyGenBinPath  string
 )
-
-func init() {
-	var err error
-
-	if sshKeyScanBinPath, err = exec.LookPath("ssh-keyscan"); err != nil {
-		fmt.Fprintf(os.Stderr, "ssh-keyscan binary not found!\n")
-
-		os.Exit(1)
-	}
-
-	if sshKeyGenBinPath, err = exec.LookPath("ssh-keygen"); err != nil {
-		fmt.Fprintf(os.Stderr, "ssh-keygen binary not found!\n")
-
-		os.Exit(1)
-	}
-}
 
 func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)

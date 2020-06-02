@@ -32,14 +32,14 @@ func (t target) String() string {
 func parseRoster(path string) (map[string]target, error) {
 	fd, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("roster error: %w", err)
+		return nil, fmt.Errorf("roster: %w", err)
 	}
 
 	defer fd.Close()
 
 	var roster map[string]target
 	if err := yaml.NewDecoder(fd).Decode(&roster); err != nil {
-		return nil, fmt.Errorf("roster error: %w", err)
+		return nil, fmt.Errorf("roster: %w", err)
 	}
 
 	return roster, nil
