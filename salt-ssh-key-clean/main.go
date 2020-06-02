@@ -21,7 +21,7 @@ func init() {
 }
 
 func main() {
-	flag.StringVar(&cmdRosterFilePath, "roster", "/root/roster_salt", "defines an location for the default roster file")
+	flag.StringVar(&cmdRosterFilePath, "roster", "/etc/salt/roster", "defines an location for the default roster file")
 	flag.StringVar(&cmdKnownHostsFilePath, "hosts", "/root/.ssh/known_hosts", "defines an location for the default known_hosts file")
 	flag.IntVar(&cmdNumberOfConcurentJobs, "parallel", 5, "defines amount of concurent workers")
 
