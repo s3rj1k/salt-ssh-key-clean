@@ -40,7 +40,7 @@ const ( // intentionally unconfigurable in runtime
 	defaultUndefinedShortTypeName      = "undef"
 
 	defaultHostStatusSkipList         = "reserved,unused,deleted" // string slice separated by comma
-	defaultRoleNamesForGetListMethods = "mirohost"                // string slice separated by comma
+	defaultRoleNamesForGetListMethods = "mirohost,dnshosting"     // string slice separated by comma
 )
 
 // CreateDefaultConfig creates default application config.

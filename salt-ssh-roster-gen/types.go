@@ -102,7 +102,7 @@ func (s GetListResultInnerObj) GetShortNodeFQDN() string {
 // GetShortHostingContainerType returns short type of hosting container
 func (s GetListResultInnerObj) GetShortHostingContainerType() string {
 	switch strings.ToLower(strings.TrimSpace(s.Type)) {
-	case "vps":
+	case "vs":
 		return defaultEVPSShortTypeName
 	case "shared":
 		return defaultSharedHostingShortTypeName
