@@ -14,7 +14,6 @@ type GetListErrInnerDataObj struct {
 // GetListParamsObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList object.
 type GetListParamsObj struct {
 	AccessKey string `json:"accessKey"`
-	Project   string `json:"project,omitempty"`
 }
 
 // GetListResultInnerObj defines JSON-RPC GetServiceDevicesList/GetNodesList/GetContainersList single element of result object.
@@ -40,6 +39,8 @@ type GetListResultInnerObj struct {
 		IP     net.IP `json:"ip"`
 	} `json:"ip,omitempty"`
 
+	Roles []string `json:"roles"`
+
 	// THIS IS A HACK !!!
 	IPV6Hextet string `json:"v6Hextet"`
 }
@@ -59,13 +60,14 @@ func (s GetListResultInnerObj) GetCombinedRoles(roles ...string) []string {
 	}
 
 	roles = append(roles, s.Type)
+	roles = append(roles, s.Roles...)
 
 	return FilterStringSlice(roles)
 }
 
-// Skip is used for filtering out invalid roster targets.
-func (s GetListResultInnerObj) Skip(skip map[string]struct{}) bool {
-	if _, ok := skip[s.Status]; ok {
+// Skip is used for filtering out invalid roster targets, filters out invalid statuses and checks that at least one of provided roles is set.
+func (s GetListResultInnerObj) Skip(skeepStatus map[string]struct{}, keepRoles map[string]struct{}) bool {
+	if _, ok := skeepStatus[s.Status]; ok {
 		return true
 	}
 
@@ -73,7 +75,13 @@ func (s GetListResultInnerObj) Skip(skip map[string]struct{}) bool {
 		return true
 	}
 
-	return false
+	for _, role := range s.Roles {
+		if _, ok := keepRoles[role]; ok {
+			return false
+		}
+	}
+
+	return true
 }
 
 // GetShortFQDN returns short FQDN of a target.
@@ -134,7 +142,7 @@ func (s GetListResultInnerObj) GetServiceDeviceID(suff string) string {
 	return strings.TrimSuffix(
 		fmt.Sprintf(
 			"%s.%s",
-			s.GetFQDNWithoutPublicSuffix(),
+			s.FQDN,
 			suff,
 		), ".",
 	)

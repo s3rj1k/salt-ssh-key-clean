@@ -14,7 +14,6 @@ curl -X POST https://internalrpc.mirohost.net/v1/ -u user:password -H "Content-T
     "jsonrpc":"2.0",
     "method": "getServiceDevicesList",
     "params": {
-        "project":"mirohost",
         "accessKey":"rpcAccessKey"
     }
 }' | jq
@@ -44,7 +43,7 @@ const (
 	GetContainersListMethodName     = "getContainersList"
 )
 
-func getListWrapper(c *client.Config, key, method, project string) (GetListResultObj, error) {
+func getListWrapper(c *client.Config, key, method string) (GetListResultObj, error) {
 	// prepare results object
 	resultObj := GetListResultObj{
 		Data:   make([]GetListResultInnerObj, 0),
@@ -54,11 +53,6 @@ func getListWrapper(c *client.Config, key, method, project string) (GetListResul
 	// JSON-RPC params field
 	paramsObj := GetListParamsObj{
 		AccessKey: key,
-	}
-
-	// set project name
-	if len(project) > 0 {
-		paramsObj.Project = project
 	}
 
 	// convert params object to bytes
@@ -91,16 +85,16 @@ func getListWrapper(c *client.Config, key, method, project string) (GetListResul
 }
 
 // GetServiceDevicesList calls remote JSON-RPC server to get list of service hosts (physical and virtual).
-func GetServiceDevicesList(c *client.Config, key, project string) (GetListResultObj, error) {
-	return getListWrapper(c, key, GetServiceDevicesListMethodName, project)
+func GetServiceDevicesList(c *client.Config, key string) (GetListResultObj, error) {
+	return getListWrapper(c, key, GetServiceDevicesListMethodName)
 }
 
 // GetNodeList calls remote JSON-RPC server to get list of hosting nodes.
 func GetNodeList(c *client.Config, key string) (GetListResultObj, error) {
-	return getListWrapper(c, key, GetNodeListMethodName, "")
+	return getListWrapper(c, key, GetNodeListMethodName)
 }
 
 // GetContainersList calls remote JSON-RPC server to get list of hosting containers.
 func GetContainersList(c *client.Config, key string) (GetListResultObj, error) {
-	return getListWrapper(c, key, GetContainersListMethodName, "")
+	return getListWrapper(c, key, GetContainersListMethodName)
 }

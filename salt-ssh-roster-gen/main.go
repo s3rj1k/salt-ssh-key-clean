@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// get list of service hosts
-	serviceHostsList, err := GetServiceDevicesList(rpc, defaultRPCAccessKey, defaultProjectNameForGetListMethods)
+	serviceHostsList, err := GetServiceDevicesList(rpc, defaultRPCAccessKey)
 	if err != nil {
 		fatal.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func main() {
 
 	f := func(list GetListResultObj, cfg *Config, roster *Roster) {
 		for _, el := range list.Data {
-			if el.Skip(cfg.HostStatusSkipList) {
+			if el.Skip(cfg.HostStatusSkipList, cfg.RoleNamesKeepList) {
 				continue
 			}
 

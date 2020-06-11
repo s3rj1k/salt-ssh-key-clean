@@ -30,8 +30,6 @@ const ( // intentionally unconfigurable in runtime
 	defaultRosterTargetThinDirPrefix = "/"
 	defaultRosterTargetThinDirSuffix = "/salt/"
 
-	defaultProjectNameForGetListMethods = "mirohost"
-
 	defaultHostingNodeListSuffix      = "hosting"
 	defaultHostingContainerListSuffix = ""
 	defaultServiceDevicesListSuffix   = "service"
@@ -41,7 +39,8 @@ const ( // intentionally unconfigurable in runtime
 	defaultSmartDedicatedShortTypeName = "sm"
 	defaultUndefinedShortTypeName      = "undef"
 
-	defaultHostStatusSkipList = "reserved,unused,deleted" // string slice separated by comma
+	defaultHostStatusSkipList         = "reserved,unused,deleted" // string slice separated by comma
+	defaultRoleNamesForGetListMethods = "mirohost"                // string slice separated by comma
 )
 
 // CreateDefaultConfig creates default application config.
@@ -52,8 +51,6 @@ func CreateDefaultConfig() *Config {
 	c.RPCBasicAuthUser = defaultRPCBasicAuthUser
 	c.RPCBasicAuthPass = defaultRPCBasicAuthPass
 	c.RPCAccessKey = defaultRPCAccessKey
-
-	c.ProjectNameForGetListMethods = defaultProjectNameForGetListMethods
 
 	c.RosterTargetUser = defaultRosterTargetUser
 	c.RosterTargetThinDirPrefix = defaultRosterTargetThinDirPrefix
@@ -76,6 +73,12 @@ func CreateDefaultConfig() *Config {
 		c.HostStatusSkipList[el] = struct{}{}
 	}
 
+	// seed default roles keep list
+	c.RoleNamesKeepList = make(map[string]struct{})
+	for _, el := range strings.Split(defaultRoleNamesForGetListMethods, ",") {
+		c.RoleNamesKeepList[el] = struct{}{}
+	}
+
 	return c
 }
 
@@ -85,8 +88,6 @@ type Config struct {
 	RPCBasicAuthUser string
 	RPCBasicAuthPass string
 	RPCAccessKey     string
-
-	ProjectNameForGetListMethods string
 
 	RosterFilePath string
 
@@ -105,6 +106,7 @@ type Config struct {
 	UndefinedShortTypeName      string
 
 	HostStatusSkipList map[string]struct{}
+	RoleNamesKeepList  map[string]struct{}
 }
 
 // ReadFromEnvironment reads configuration parameters from environment variables.
