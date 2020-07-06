@@ -17,12 +17,12 @@ const (
 
 // IPRecord describes IP VLAN relation.
 type IPRecord struct {
-	IP      net.IP  `yaml:"IP"`
-	Gateway net.IP  `yaml:"Gateway,omitempty"`
-	Network *string `yaml:"Network,omitempty"` // https://github.com/golang/go/issues/12803
-	IsIPv4  bool    `yaml:"IsIPv4"`
-	IsIPv6  bool    `yaml:"IsIPv6"`
-	VlanID  int     `yaml:"VlanID,omitempty"`
+	IP      net.IP `yaml:"IP"`
+	Gateway net.IP `yaml:"Gateway,omitempty"`
+	Network string `yaml:"Network,omitempty"` // https://github.com/golang/go/issues/12803
+	IsIPv4  bool   `yaml:"IsIPv4"`
+	IsIPv6  bool   `yaml:"IsIPv6"`
+	VlanID  int    `yaml:"VlanID,omitempty"`
 }
 
 // Target describes single target element of salt-ssh roster.
@@ -85,12 +85,9 @@ func CreateTarget(el GetListResultInnerObj, cfg *Config, roles ...string) Target
 			continue
 		}
 
-		network := new(string)
-		if el.Network != nil {
-			if _, ntwrk, err := net.ParseCIDR(*el.Network); err == nil {
-				str := ntwrk.String()
-				network = &str
-			}
+		var network string
+		if _, ntwrk, err := net.ParseCIDR(el.Network); err == nil {
+			network = ntwrk.String()
 		}
 
 		ip = append(ip, IPRecord{

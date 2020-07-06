@@ -35,10 +35,10 @@ type GetListResultInnerObj struct {
 	} `json:"configurationManagement"`
 
 	IP []struct {
-		VlanID  int     `json:"vlanID,omitempty"`
-		IP      net.IP  `json:"ip"`
-		Gateway net.IP  `json:"vlanGateway,omitempty"`
-		Network *string `json:"vlanNetwork,omitempty"` // https://github.com/golang/go/issues/12803
+		VlanID  int    `json:"vlanID,omitempty"`
+		IP      net.IP `json:"ip"`
+		Gateway net.IP `json:"vlanGateway,omitempty"`
+		Network string `json:"vlanNetwork,omitempty"` // https://github.com/golang/go/issues/12803
 	} `json:"ip,omitempty"`
 
 	Roles []string `json:"roles"`
