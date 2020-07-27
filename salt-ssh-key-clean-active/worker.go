@@ -1,7 +1,6 @@
 package main
 
 import (
-	"runtime"
 	"sync"
 )
 
@@ -14,22 +13,37 @@ func worker(maxWorkers int, in <-chan target) <-chan []knownHost {
 	for w := 1; w <= maxWorkers; w++ {
 		wg.Add(1)
 
-		go func(in <-chan target, out chan<- []knownHost) {
+		go func(in <-chan target, out chan<- []knownHost, worker int) {
 			defer func() {
 				wg.Done()
 			}()
 
 			for target := range in {
-				if testActivePing(cmdPrivateKeyPath, target.Host, target.User, target.Port) {
-					debug.Printf("[+] {%d} %v\n", runtime.NumGoroutine(), target)
+				if !testTCPPing(target.Host, target.Port) {
+					if !testICMPPing(target.Host) {
+						info.Printf("Unavailable host (TCP, ICMP): %v\n", target)
+						debug.Printf("[-] {%d} %v\n", worker, target)
 
-					out <- sshKeyScan(target.Host, target.Port)
-				} else {
-					info.Printf("Unavailable host: %v\n", target)
-					debug.Printf("[-] {%d} %v\n", runtime.NumGoroutine(), target)
+						continue
+					}
+
+					info.Printf("Unavailable host (TCP): %v\n", target)
+					debug.Printf("[-] {%d} %v\n", worker, target)
+
+					continue
 				}
+
+				if !testSSHKey(cmdPrivateKeyPath, target.Host, target.User, target.Port) {
+					info.Printf("Unknown host key: %v\n", target)
+					debug.Printf("[-] {%d} %v\n", worker, target)
+
+					continue
+				}
+
+				debug.Printf("[+] {%d} %v\n", worker, target)
+				out <- sshKeyScan(target.Host, target.Port)
 			}
-		}(in, out)
+		}(in, out, w)
 	}
 
 	wg.Wait()
