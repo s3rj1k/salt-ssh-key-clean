@@ -5,10 +5,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
+
+	ping "github.com/sparrc/go-ping"
 )
 
 const (
@@ -114,7 +117,7 @@ func knownHostExecOutputWrapper(name string, args ...string) []knownHost {
 	return out
 }
 
-func testActivePing(key, host, user string, port int) bool {
+func testSSHKey(key, host, user string, port int) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
@@ -144,6 +147,39 @@ func testActivePing(key, host, user string, port int) bool {
 	}
 
 	return true
+}
+
+func testTCPPing(host string, port int) bool {
+	conn, err := net.DialTimeout(
+		"tcp",
+		net.JoinHostPort(host, strconv.Itoa(port)),
+		timeout*time.Second,
+	)
+	if err != nil {
+		return false
+	}
+
+	defer conn.Close()
+
+	return conn != nil
+}
+
+func testICMPPing(host string) bool {
+	pinger, err := ping.NewPinger(host)
+	if err != nil {
+		return false
+	}
+
+	pinger.SetPrivileged(true)
+	pinger.Count = 1
+	pinger.Interval = timeout * time.Second
+	pinger.Timeout = timeout * time.Second
+
+	pinger.Run()
+
+	stats := pinger.Statistics()
+
+	return stats.PacketLoss == 0
 }
 
 func sshKeyScan(host string, port int) []knownHost {
