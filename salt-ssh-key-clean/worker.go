@@ -28,13 +28,13 @@ func worker(maxWorkers int, in <-chan target) <-chan target {
 			for target := range in {
 				if !testTCPPing(target.Host, target.Port) {
 					if !testICMPPing(target.Host) {
-						out <- target // we are going to remove only explicety invalid keys
+						// out <- target // we are going to remove only explicety invalid keys
 						critical.Printf("%s #[%03d]: %v\n", unavailableByTCPandICMP, worker, target)
 
 						continue
 					}
 
-					out <- target // we are going to remove only explicety invalid keys
+					// out <- target // we are going to remove only explicety invalid keys
 					critical.Printf("%s #[%03d]: %v\n", unavailableByTCP, worker, target)
 
 					continue

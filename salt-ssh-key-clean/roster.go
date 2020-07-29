@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -28,9 +28,7 @@ type target struct {
 
 // RemoveList creates a list of combinations for `ssh-keygen -R` command.
 func (t target) RemoveList() []string {
-	if net.ParseIP(t.Host) != nil {
-		return nil
-	}
+	t.Host = strings.TrimSpace(t.Host)
 
 	if t.Port == defaultSSHPort {
 		return []string{t.Host}
