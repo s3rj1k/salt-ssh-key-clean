@@ -50,7 +50,7 @@ func init() {
 		fatal.Fatalf("ssh binary not found!\n")
 	}
 
-	if sshKeyScanBinPath, err = exec.LookPath("ssh-keyscan"); err != nil {
-		fatal.Fatalf("ssh-keyscan binary not found!\n")
+	if sshKeygenPath, err = exec.LookPath("ssh-keygen"); err != nil {
+		fatal.Fatalf("ssh-keygen binary not found!\n")
 	}
 }
